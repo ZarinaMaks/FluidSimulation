@@ -5,100 +5,122 @@
 
 #include "fluidlib.h"
 
-////////// class VectorField /////////////////////////////////////////////////
-// Класс - векторное поле, содержит трехмерный массив векторов              //
-// "Vector"...                                                              //
+////////// class FluidException //////////////////////////////////////////////
+// Описание : fluidlib.h                                                    //
 //////////////////////////////////////////////////////////////////////////////
 
-// (1) Конструктор
-VectorField()
+// (1) Конструктор (обнуляет поле)
+fluid::FluidException::FluidException()
 {
-    
+    errCode_ = 0;
 }
 
-// (2) Конструктор копирования
-VectorField(const VectorField& field)
+// (2) Конструктор (инициализирует поле)
+fluid::FluidException::FluidException(const int& newErrCode)
 {
-    
-}
-
-// (3) Перегрузка оператора присваивания
-VectorField& operator=(const VectorField& field)
-{
-    
-}
-
-// (4) 
-const Vector& get(const int& i, const int& j, const int& k)
-{
-    
-}
-
-// (5) 
-Vector& get(const int& i, const int& j, const int& k)
-{
-    
-}
-
-// (6) Освобождает выделенную память
-void clear()
-{
-    
-}
-
-// (7) Деструктор
-~VectorField()
-{
-    
-}
-
-// TODO: add more methods
-
-////////// class ScalarField /////////////////////////////////////////////////
-// Класс - поле скаляров, содержит трехмерный массив скаляров типа          //
-// "real"...                                                                //
-//////////////////////////////////////////////////////////////////////////////
-
-// (1) Конструктор
-ScalarField()
-{
-    
+    errCode_ = newErrCode;
 }
 
 // (3) Конструктор копирования
-ScalarField(const ScalarField& field)
+fluid::FluidException::FluidException(const FluidException& exception)
 {
-    
+    *this = exception;
+}
+
+// (4) Перегрузка оператора присваивания
+fluid::FluidException& fluid::FluidException::operator=(const FluidException& 
+                                                        exception)
+{
+    if (&exception != this)
+    {
+        errCode_ = exception.errCode_;
+    }
+    return *this;
+}
+
+// (5) Возвращает код ошибки
+int fluid::FluidException::error() const
+{
+    return errCode_;
+}
+
+// (6) Установить значение ошибки
+void fluid::FluidException::setErrCode(const int& code)
+{
+    if (code >= 0)
+    {
+        errCode_ = code;
+    }
+}
+
+////////// struct Vector /////////////////////////////////////////////////////
+// Описание : fluidlib.h.                                                   //
+//////////////////////////////////////////////////////////////////////////////
+
+// (1) Конструктор (обнуляет поля)
+fluid::Vector::Vector()
+{
+    x = 0;
+    y = 0;
+    z = 0;
+}
+
+// (2) Конструктор копирования
+fluid::Vector::Vector(const fluid::Vector& vector)
+{
+    *this = vector;
 }
 
 // (3) Перегрузка оператора присваивания
-VectorField& operator=(const VectorField& field)
+fluid::Vector& fluid::Vector::operator=(const fluid::Vector& vector)
 {
-    
+    if (this != &vector)
+    {
+        x = vector.x;
+        y = vector.y;
+        z = vector.z;
+    }
+    return *this;
 }
- 
-// (4)
-const real& get(const int& i, const int& j, const int& k) const
+
+// (4) Обнуляет поля
+void fluid::Vector::clear()
 {
-    
+    x = 0;
+    y = 0;
+    z = 0;
 }
- 
-// (5)
-real& get(const int& i, const int& j, const int& k)
+
+// (5) Деструктор
+fluid::Vector::~Vector()
 {
-    
+    clear();
 }
- 
-// (6) Освобождает выделенную память
-void clear()
+
+////////// class Functions ///////////////////////////////////////////////////
+// Описание : fluidlib.h.                                                   //
+//////////////////////////////////////////////////////////////////////////////
+
+// (1) Градиент
+fluid::Vector fluid::Operator::grad(const fluid::ScalarField& field, 
+                                    const int& x, const int& y, const int& z)
 {
-    
+    //...
+    return Vector();
 }
- 
-// (7) Деструктор
-~ScalarField()
+
+// (2) Дивергенция
+fluid::real fluid::Operator::div(const fluid::VectorField& field, 
+                                 const int& x, const int& y, const int& z)
 {
-    
+    //...
+    return 0;
 }
- 
-// TODO: add more methods
+
+// (3) Оператор Лапласа
+fluid::real fluid::Operator::divGrad(const fluid::ScalarField& field, 
+                                     const int& x, const int& y, const int& z)
+{
+    //...
+    return 0;
+}
