@@ -6,69 +6,53 @@
 // Дата     : ??.??.2020                                                    //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <exception>
+#include "errlib.h"
 
 namespace fluid
 {
-    // Максимальный и минимальный размеры поля по "X"
-    const int MAX_SIZE_X = 1000;
-    const int MIN_SIZE_X = 10;
-    
-    // Максимальный и минимальный размеры поля по "Y"
-    const int MAX_SIZE_Y = 1000;
-    const int MIN_SIZE_Y = 10;
-    
-    // Максимальный и минимальный размеры поля по "Z"
-    const int MAX_SIZE_Z = 1000;
-    const int MIN_SIZE_Z = 10;
-    
     // Универсальный вещественный тип
-    typedef double real;
+    typedef double Real;
     
-    ////////// class FluidException //////////////////////////////////////////
-    // Дочерний класс, унаследованный от "std::exception". Содежит в себе   //
-    // код ошибки "errCode_" >= 0 (0 - отсутствие ошибок).                  //
-    // Описание ошибок см. файл....                                         //
+    // Максимальный и минимальный размеры поля "Field" по "X"
+    const int MAX_SIZE_X = 1000;
+    const int MIN_SIZE_X = 1;
+    
+    // Максимальный и минимальный размеры поля "Field" по "Y"
+    const int MAX_SIZE_Y = 1000;
+    const int MIN_SIZE_Y = 1;
+    
+    // Максимальный и минимальный размеры поля "Field" по "Z"
+    const int MAX_SIZE_Z = 1000;
+    const int MIN_SIZE_Z = 1;
+    
+    // Приращения аргументов
+    const Real DS = 1.0;
+    const Real DX = DS;
+    const Real DY = DS;
+    const Real DZ = DS;
+    
+    ////////// bool inRangeSizeX/Y/Z /////////////////////////////////////////
+    // Возвращают "true", если значение аргумента не выходит за границы.    //
     //////////////////////////////////////////////////////////////////////////
     
-    class FluidException : public std::exception
+    bool inRangeSizeX(const int& sizeX);
+    
+    bool inRangeSizeY(const int& sizeY);
+    
+    bool inRangeSizeZ(const int& sizeZ);
+    
+    /*
+    ////////// class Vector //////////////////////////////////////////////////
+    // Этот класс описывает трехмерный вектор.                              //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class Vector
     {
         private :
             
-            int errCode_;   // Код ошибки
-            
-        public :
-            
-            // (1) Конструктор (обнуляет поле)
-            FluidException();
-            
-            // (2) Конструктор (инициализирует поле)
-            FluidException(const int& code);
-            
-            // (3) Конструктор копирования
-            FluidException(const FluidException& exeption);
-            
-            // (4) Перегрузка оператора присваивания
-            FluidException& operator=(const FluidException& exeption);
-            
-            // (5) Возвращает код ошибки
-            int error() const;
-            
-            // (6) Установить значение ошибки
-            void setErrCode(const int& code);
-    };
-    
-    ////////// struct Vector /////////////////////////////////////////////////
-    // Эта структура описывает трехмерный вектор.                           //
-    //////////////////////////////////////////////////////////////////////////
-    
-    struct Vector
-    {
-        public :
-            
-            real x;         // Составляющая "x"
-            real y;         // Составляющая "y"
-            real z;         // Составляющая "z"
+            Real x_;        // Составляющая "x"
+            Real y_;        // Составляющая "y"
+            Real z_;        // Составляющая "z"
             
         public :
             
@@ -78,19 +62,40 @@ namespace fluid
             // (2) Конструктор копирования
             Vector(const Vector& vector);
             
-            // (3) Перегрузка оператора присваивания
+            // (3) Конструктор (задает составляющие вектора)
+            Vector(Real& x, Real& y, Real& z);
+            
+            // (4) Перегрузка оператора присваивания
             Vector& operator=(const Vector& vector);
             
-            // (4) Обнуляет поля
+            // (5) Доступ к составляющей "x"
+            Real& x();
+            
+            // (6) Доступ к составляющей "y"
+            Real& y();
+            
+            // (7) Доступ к составляющей "z"
+            Real& z();
+            
+            // (8) Константный доступ к составляющей "x"
+            const Real& x() const;
+            
+            // (9) Константный доступ к составляющей "y"
+            const Real& y() const;
+            
+            // (10) Константный доступ к составляющей "z"
+            const Real& z() const;
+            
+            // (11) Обнуляет поля
             void clear();
             
-            // (5) Деструктор
+            // (12) Деструктор
             ~Vector();
     };
+    */
     
-    ////////// class Field ///////////////////////////////////////////////////
-    // Поле величин типа "Т", подразумевается использование скалярного и    //
-    // векторного полей.                                                    //
+    ////////// class ScalarField /////////////////////////////////////////////
+    // Класс, описывающий скалярное поле.                                   //
     //                                                                      //
     // В общем случае :                                                     //
     //  1) MIN_SIZE_X <= sizeX_ <= MAX_SIZE_X                               //
@@ -98,310 +103,168 @@ namespace fluid
     //  3) MIN_SIZE_Z <= sizeZ_ <= MAX_SIZE_Z                               //
     //////////////////////////////////////////////////////////////////////////
     
-    template <typename T>
-    
-    class Field
+    class ScalarField
     {
         private :
             
-            T*** cells_;    // Трехмерный массив элементов поля
-            int  sizeX_;    // Размер поля по "X"
-            int  sizeY_;    // Размер поля по "Y"
-            int  sizeZ_;    // Размер поля по "Z"
+            Real*** points_;            // Трехмерный массив элементов поля
+            int     sizeX_;             // Размер поля по "X"
+            int     sizeY_;             // Размер поля по "Y"
+            int     sizeZ_;             // Размер поля по "Z"
             
         public :
             
             // (1) Конструктор (обнуляет поля класса)
-            Field();
+            ScalarField();
             
             // (2) Конструктор (Сразу задает размер поля)
-            Field(const int& sizeX, const int& sizeY, const int& sizeZ);
+            ScalarField(int sizeX, int sizeY, int sizeZ);
             
             // (3) Конструктор копирования
-            Field(const Field& field);
+            ScalarField(const ScalarField& field);
             
             // (4) Перегрузка оператора присваивания
-            Field& operator=(const Field& field);
+            ScalarField& operator=(const ScalarField& field);
             
-            // (5) Изменяет размер поля, уничтожая имеющуюся информацию
-            void resize(const int& sizeX, const int& sizeY, const int& sizeZ);
+            // (5) Изменяет размер поля, уничтожая всю информацию
+            void resize(int sizeX, int sizeY, int sizeZ);
             
             // (6) Перегрузка оператора ()
-            T& operator()(const int& x, const int& y, const int& z);
+            Real& operator()(int x, int y, int z);
             
             // (7) Перегрузка оператора () (const случай)
-            const T& operator()(const int& x, const int& y, 
-                                const int& z) const;
+            const Real& operator()(int x, int y, int z) const;
             
-            // (8) Возвращает размер по "X"
+            // (8) Проверка на выход за границы
+            bool isInRange(int x, int y, int z) const;
+            
+            // (9) Возвращает размер по "X"
             int getSizeX() const;
             
-            // (9) Возвращает размер по "Y"
+            // (10) Возвращает размер по "Y"
             int getSizeY() const;
             
-            // (10) Возвращает размер по "Z"
+            // (11) Возвращает размер по "Z"
             int getSizeZ() const;
             
-            // (11) Освобождает выделенную память
+            // (12) Перегрузка оператора "+="
+            ScalarField& operator+=(const ScalarField& field);
+            
+            // (13) Перегрузка оператора "-="
+            ScalarField& operator-=(const ScalarField& field);
+            
+            // (14) Освобождает выделенную память
             void clear();
             
-            // (12) Деструктор
-            ~Field();
+            // (15) Деструктор
+            ~ScalarField();
     };
     
-    ////////// class Field ///////////////////////////////////////////////////////
-    // Описание методов.                                                        //
-    //////////////////////////////////////////////////////////////////////////////
-    
-    template <typename T>
-    
-    // (1) Конструктор (обнуляет поля класса)
-    Field<T>::Field()
-    {
-        cells_ = nullptr;
-        sizeX_ = 0;
-        sizeY_ = 0;
-        sizeZ_ = 0;
-    }
-    
-    template <typename T>
-    
-    // (2) Конструктор (Сразу задает размер поля)
-    Field<T>::Field(const int& sizeX, const int& sizeY, const int& sizeZ)
-    {
-        try
-        {
-            resize(sizeX, sizeY, sizeZ);
-        }
-        catch (...)
-        {
-            // Предотвращаем выброс исключения
-        }
-    }
-    
-    template <typename T>
-    
-    // (3) Конструктор копирования
-    Field<T>::Field(const Field& field)
-    {
-        *this = field;
-    }
-    
-    template <typename T>
-    
-    // (4) Перегрузка оператора присваивания
-    Field<T>& Field<T>::operator=(const Field& field)
-    {
-        // Самоприсваивание
-        if (this != &field)
-        {
-            // Меняем размер
-            try
-            {
-                resize(field.sizeX_, field.sizeY_, field.sizeZ_);
-            }
-            catch (...)
-            {
-                // Предотвращаем выброс исключения
-            }
-            
-            // Копируем данные
-            for (int i = 0; i < sizeX_; ++i)
-            {
-                for (int j = 0; j < sizeY_; ++j)
-                {
-                    for (int k = 0; k < sizeZ_; ++k)
-                    {
-                        cells_[i][j][k] = field.cells_[i][j][k];
-                    }
-                }
-            }
-        }
-        return *this;
-    }
-    
-    template <typename T>
-    
-    // (5) Изменяет размер поля, уничтожая имеющуюся информацию
-    void Field<T>::resize(const int& sizeX, const int& sizeY, 
-                          const int& sizeZ)
-    {
-        // Если размеры массивов отличаются
-        bool hasDiff = sizeX_ != sizeX || sizeY_ != sizeY || sizeZ_ != sizeZ;
-        
-        // Если значения аргументов корректны 
-        bool isOkX = sizeX >= MIN_SIZE_X && sizeX <= MAX_SIZE_X;
-        bool isOkY = sizeY >= MIN_SIZE_Y && sizeY <= MAX_SIZE_Y;
-        bool isOkZ = sizeZ >= MIN_SIZE_Y && sizeY <= MAX_SIZE_Y;
-        bool isOk  = isOkX && isOkY && isOkZ;
-        
-        // Если имеет смысл менять размер массива
-        try
-        {
-            if (isOk && hasDiff)
-            {
-                // Освобождение памяти
-                clear();
-                
-                // Новые размеры
-                sizeX_ = sizeX;
-                sizeY_ = sizeY;
-                sizeZ_ = sizeZ;
-                
-                // Выделение новой памяти
-                cells_ = new T**[sizeX_];
-                for (int i = 0; i < sizeX_; ++i)
-                {
-                    cells_[i] = new T*[sizeY_];
-                    for (int j = 0; j < sizeY_; ++j)
-                    {
-                        cells_[i][j] = new T[sizeZ_];
-                    }
-                }
-            }
-        }
-        catch (std::bad_alloc&)
-        {
-            clear();
-            throw FluidException(1);
-        }
-        catch (std::exception&)
-        {
-            clear();
-            throw FluidException(2);
-        }
-        catch (...)
-        {
-            clear();
-            throw FluidException(3);
-        }
-    }
-    
-    template <typename T>
-    
-    // (6) Перегрузка оператора ()
-    T& Field<T>::operator()(const int& x, const int& y, const int& z)
-    {
-        // Если значения аргументов корректны
-        bool isOkX = x < sizeX_ && x >= 0;
-        bool isOkY = y < sizeY_ && y >= 0;
-        bool isOkZ = z < sizeZ_ && z >= 0;
-        
-        // Выброс исключения, если был выход за границы
-        if (!isOkX || !isOkY || !isOkZ)
-        {
-            throw FluidException(4);
-        }
-        return cells_[x][y][z];
-    }
-    
-    template <typename T>
-    
-    // (7) Перегрузка оператора () (const случай)
-    const T& Field<T>::operator()(const int& x, const int& y, 
-                                  const int& z) const
-    {
-        return this->operator()(x,y,z);
-    }
-    
-    template <typename T>
-    
-    // (8) Возвращает размер по "X"
-    int Field<T>::getSizeX() const
-    {
-        return sizeX_;
-    }
-    
-    template <typename T>
-    
-    // (9) Возвращает размер по "Y"
-    int Field<T>::getSizeY() const
-    {
-        return sizeY_;
-    }
-    
-    template <typename T>
-    
-    // (10) Возвращает размер по "Z"
-    int Field<T>::getSizeZ() const
-    {
-        return sizeZ_;
-    }
-    
-    template <typename T>
-    
-    // (11) Освобождает выделенную память
-    void Field<T>::clear()
-    {
-        // Освобождение памяти
-        if (cells_ != nullptr)
-        {
-            for (int i = 0; i < sizeX_; ++i)
-            {
-                if (cells_[i] != nullptr)
-                {
-                    for (int j = 0; j < sizeY_; ++j)
-                    {
-                        if (cells_[i][j] != nullptr)
-                        {
-                            delete[] cells_[i][j];
-                        }
-                    }
-                    delete[] cells_[i];
-                }
-            }
-            delete[] cells_;
-            cells_ = nullptr;
-        }
-        
-        // Обнуление переменных
-        sizeX_ = 0;
-        sizeY_ = 0;
-        sizeZ_ = 0;
-    }
-    
-    template <typename T>
-    
-    // (12) Деструктор
-    Field<T>::~Field()
-    {
-        clear();
-    }
-    
-    ////////// typedefs //////////////////////////////////////////////////////
-    // Определения типов скалярного и векторного полей.                     //
+    ////////// class VectorField /////////////////////////////////////////////
+    // Класс, описывающий векторное поле, как набор трех скалярных полей.   //
     //////////////////////////////////////////////////////////////////////////
     
-    // Векторное поле
-    typedef Field<Vector> VectorField;
-    
-    // Скалярное поле
-    typedef Field<real>   ScalarField;
+    class VectorField
+    {
+        private :
+            
+            ScalarField componentX;     // Компонента "X"
+            ScalarField componentY;     // Компонента "Y"
+            ScalarField componentZ;     // Компонента "Z"
+            
+        public :
+            
+            // (1) Конструктор
+            VectorField() = default;
+            
+            // (2) Конструктор (Сразу задает размер поля)
+            VectorField(int sizeX, int sizeY, int sizeZ);
+            
+            // (3) Конструктор копирования
+            VectorField(const VectorField& field);
+            
+            // (4) Перегрузка оператора присваивания
+            VectorField& operator=(const VectorField& field);
+            
+            // (5) Изменяет размер поля, уничтожая всю информацию
+            void resize(int sizeX, int sizeY, int sizeZ);
+            
+            // (6) Доступ по ссылке к скалярному полю "X"
+            ScalarField& x();
+            
+            // (7) Доступ по ссылке к скалярному полю "Y"
+            ScalarField& y();
+            
+            // (8) Доступ по ссылке к скалярному полю "Z"
+            ScalarField& z();
+            
+            // (9) Доступ по "const" ссылке к скалярному полю "X"
+            const ScalarField& x() const;
+            
+            // (10) Доступ по "const" ссылке к скалярному полю "Y"
+            const ScalarField& y() const;
+            
+            // (11) Доступ по "const" ссылке к скалярному полю "Z"
+            const ScalarField& z() const;
+            
+            // (12) Возвращает размер по "X"
+            int getSizeX() const;
+            
+            // (13) Возвращает размер по "Y"
+            int getSizeY() const;
+            
+            // (14) Возвращает размер по "Z"
+            int getSizeZ() const;
+            
+            // (15) Перегрузка оператора "+="
+            VectorField& operator+=(const VectorField& field);
+            
+            // (16) Перегрузка оператора "-="
+            VectorField& operator-=(const VectorField& field);
+            
+            // (17) Освобождает выделенную память
+            void clear();
+            
+            // (18) Деструктор
+            ~VectorField() = default;
+    };
     
     ////////// class Operator ////////////////////////////////////////////////
-    // Класс, предназначенный для отыскания градиентов, дивергенций,        //
-    // лапласианов в определенной точке поля.                               //
+    // Класс, предназначенный для отыскания частных производных,            //
+    // градиентов, дивергенций скалярных и векторных полей.                 //
     //////////////////////////////////////////////////////////////////////////
     
     class Operator
     {
         private :
             
-            // Поля...
+            // Поля... Алармы сюда!
             
         public :
             
-            // (1) Градиент
-            Vector grad(const ScalarField& field, const int& x, const int& y, 
-                        const int& z);
+            // (1) Градиент (Возвращает по ссылке векторное поле)
+            void grad(const ScalarField& inField, VectorField& outField);
             
-            // (2) Дивергенция
-            real div(const VectorField& field, const int& x, const int& y, 
-                     const int& z);
+            // (2) Дивергенция (Возвращает по ссылке скалярное поле)
+            void div(const VectorField& inField, ScalarField& outField);
             
-            // (3) Оператор Лапласа
-            real divGrad(const ScalarField& field, const int& x, const int& y, 
-                         const int& z);
+            // (3) Частная производная функции по "x" всюду
+            void derX(const ScalarField& inField, ScalarField& outField);
+            
+            // (4) Частная производная функции по "y" всюду
+            void derY(const ScalarField& inField, ScalarField& outField);
+            
+            // (5) Частная производная функции по "z" всюду
+            void derZ(const ScalarField& inField, ScalarField& outField);
+            
+            // (6) Частная производная функции по "x" в точке
+            Real derX(const ScalarField& inField, int& x, int& y, int& z);
+            
+            // (7) Частная производная функции по "y"  в точке
+            Real derY(const ScalarField& inField, int& x, int& y, int& z);
+            
+            // (8) Частная производная функции по "z"  в точке
+            Real derZ(const ScalarField& inField, int& x, int& y, int& z);
     };
 }
 
