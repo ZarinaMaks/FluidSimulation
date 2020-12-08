@@ -305,7 +305,7 @@ ScalarField& ScalarField::operator-=(const ScalarField& field)
     bool haveMatchY = (sizeY_ == field.getSizeY());
     bool haveMatchZ = (sizeZ_ == field.getSizeZ());
     
-    // Добавить, если совпадают
+    // Вычесть, если совпадают
     if (haveMatchX && haveMatchY && haveMatchZ)
     {
         for (int i = 0; i < sizeX_; ++i)
@@ -694,7 +694,7 @@ void Poisson::solve(VectorField& field, const VectorField& free,
     solve(field.z(), free.z(), alpha, betta);
 }
 
-// (11) Освобождает выделенную память
+// (8) Освобождает выделенную память
 void Poisson::clear()
 {
     curStep_.clear();
@@ -706,6 +706,7 @@ void Poisson::clear()
 Real Poisson::step(const ScalarField& field, const ScalarField& free, 
                    Real alpha, Real betta, int i, int j, int k)
 {
+    // Вспомогательные переменные
     Real cI = 0;
     Real cJ = 0;
     Real cK = 0;
@@ -783,4 +784,206 @@ void Poisson::step(ScalarField& field, const ScalarField& free,
         }
     }
     field = curStep_;
+}
+
+////////// struct Values /////////////////////////////////////////////////////
+// Описание : fluidlib.h.                                                   //
+//////////////////////////////////////////////////////////////////////////////
+
+// (1) Конструктор (обнуляет поля)
+Values::Values()
+{
+    fx0y0z0 = 0;
+    fx0y0z1 = 0;
+    fx0y1z0 = 0;
+    fx0y1z1 = 0;
+    fx1y0z0 = 0;
+    fx1y0z1 = 0;
+    fx1y1z0 = 0;
+    fx1y1z1 = 0;
+}
+
+// (4) Обнуляет поля
+void Values::clear()
+{
+    fx0y0z0 = 0;
+    fx0y0z1 = 0;
+    fx0y1z0 = 0;
+    fx0y1z1 = 0;
+    fx1y0z0 = 0;
+    fx1y0z1 = 0;
+    fx1y1z0 = 0;
+    fx1y1z1 = 0;
+}
+
+////////// class Interpolation ///////////////////////////////////////////////
+// Описание : fluidlib.h.                                                   //
+//////////////////////////////////////////////////////////////////////////////
+
+////////// public ////////////////////////////////////////////////////////////
+
+// (1) Конструктор
+Interpolation::Interpolation()
+{
+    a0_ = 0;
+    a1_ = 0;
+    a2_ = 0;
+    a3_ = 0;
+    a4_ = 0;
+    a5_ = 0;
+    a6_ = 0;
+    a7_ = 0;
+}
+
+// (4) Вычисляет приближенное значение  в (.) на поле "field"
+Real Interpolation::compute(const ScalarField& field, Real x, Real y, Real z)
+{
+    // Проверка корректности аргументов
+    bool isInRangeX = (x >= -DX && x <= field.getSizeX() * DX);
+    bool isInRangeY = (y >= -DY && y <= field.getSizeY() * DY);
+    bool isInRangeZ = (z >= -DZ && z <= field.getSizeZ() * DZ);
+    bool haveExit   = false;
+    
+    // Границы, между которыми заключены координаты
+    int  leftX  = 0;
+    int  rightX = 0;
+    int  leftY  = 0;
+    int  rightY = 0;
+    int  leftZ  = 0;
+    int  rightZ = 0;
+    
+    // Проверяем корректность входных данных
+    if (!isInRangeX || !isInRangeY || !isInRangeZ)
+    {
+        throw err::FluidException(1);
+    }
+    
+    // Если корректны, то найти описывающий параллелепипед
+    haveExit = false;
+    for (int i = -1; i <= field.getSizeX() && !haveExit; ++i)
+    {
+        if (i * DX <= x)
+        {
+            leftX = i;
+        }
+        if (i * DX >= x)
+        {
+            rightX   = i;
+            haveExit = true;
+        }
+    }
+    
+    haveExit = false;
+    for (int i = -1; i <= field.getSizeY() && !haveExit; ++i)
+    {
+        if (i * DY <= y)
+        {
+            leftY = i;
+        }
+        if (i * DY >= y)
+        {
+            rightY   = i;
+            haveExit = true;
+        }
+    }
+    
+    haveExit = false;
+    for (int i = -1; i <= field.getSizeZ() && !haveExit; ++i)
+    {
+        if (i * DZ <= z)
+        {
+            leftZ = i;
+        }
+        if (i * DZ >= z)
+        {
+            rightZ   = i;
+            haveExit = true;
+        }
+    }
+    
+    // Перевести координаты в систему отсчета параллелепипеда
+    x = x - leftX * DX;
+    y = y - leftY * DY;
+    z = z - leftZ * DZ;
+    
+    // Доопределить значениями на границе, если попали за границу
+    if (leftX == -1)
+    {
+        leftX = 0;
+    }
+    if (leftY == -1)
+    {
+        leftY = 0;
+    }
+    if (leftZ == -1)
+    {
+        leftZ = 0;
+    }
+    
+    // Доопределить значениями на границе, если попали за границу
+    if (rightX == field.getSizeX())
+    {
+        rightX = field.getSizeX() - 1;
+    }
+    if (rightY == field.getSizeY())
+    {
+        rightY = field.getSizeY() - 1;
+    }
+    if (rightZ == field.getSizeZ())
+    {
+        rightZ = field.getSizeZ() - 1;
+    }
+    
+    // Записываем значения "ф-ции" в вершины параллелепипеда
+    values_.fx0y0z0 = field(leftX, leftY, leftZ);
+    values_.fx0y0z1 = field(leftX, leftY, rightZ);
+    values_.fx0y1z0 = field(leftX, rightY, leftZ);
+    values_.fx0y1z1 = field(leftX, rightY, rightZ);
+    values_.fx1y0z0 = field(rightX, leftY, leftZ);
+    values_.fx1y0z1 = field(rightX, leftY, rightZ);
+    values_.fx1y1z0 = field(rightX, rightY, leftZ);
+    values_.fx1y1z1 = field(rightX, rightY, rightZ);
+    
+    return compute(x, y, z);
+}
+
+// (5) Обнуляет поля
+void Interpolation::clear()
+{
+    a0_ = 0;
+    a1_ = 0;
+    a2_ = 0;
+    a3_ = 0;
+    a4_ = 0;
+    a5_ = 0;
+    a6_ = 0;
+    a7_ = 0;
+    values_.clear();
+}
+
+////////// private ///////////////////////////////////////////////////////////
+
+// (1) Вычисляет приближенное значение  в (.), используя "values"
+Real Interpolation::compute(Real x, Real y, Real z)
+{
+    // Проверяем корректность входных данных
+    if (x < 0 || x > DX || y < 0 || y > DY || z < 0 || z > DZ)
+    {
+        throw err::FluidException(1);
+    }
+    
+    // Общий знаменатель
+    Real denominator = DX * DY * DZ;
+    
+    // Вычисляем все коэффициенты (см. Википедия)
+    a0_ = (values_.fx0y0z0 / denominator) * (DX - x) * (DY - y) * (DZ - z);
+    a1_ = (values_.fx0y0z1 / denominator) * (DX - x) * (DY - y) * (z);
+    a2_ = (values_.fx0y1z0 / denominator) * (DX - x) * (y) * (DZ - z);
+    a3_ = (values_.fx1y0z0 / denominator) * (x) * (DY - y) * (DZ - z);
+    a4_ = (values_.fx0y1z1 / denominator) * (DX - x) * (y) * (z);
+    a5_ = (values_.fx1y1z0 / denominator) * (x) * (y) * (DZ - z);
+    a6_ = (values_.fx1y0z1 / denominator) * (x) * (DY - y) * (z);
+    a7_ = (values_.fx1y1z1 / denominator) * (x) * (y) * (z);
+    
+    return a0_ + a1_ + a2_ + a3_ + a4_ + a5_ + a6_ + a7_;
 }

@@ -110,10 +110,10 @@ namespace fluid
     {
         private :
             
-            Real*** points_;            // Трехмерный массив элементов поля
-            int     sizeX_;             // Размер поля по "X"
-            int     sizeY_;             // Размер поля по "Y"
-            int     sizeZ_;             // Размер поля по "Z"
+            Real*** points_;        // Трехмерный массив элементов поля
+            int     sizeX_;         // Размер поля по "X"
+            int     sizeY_;         // Размер поля по "Y"
+            int     sizeZ_;         // Размер поля по "Z"
             
         public :
             
@@ -171,9 +171,9 @@ namespace fluid
     {
         private :
             
-            ScalarField componentX_;     // Компонента "X"
-            ScalarField componentY_;     // Компонента "Y"
-            ScalarField componentZ_;     // Компонента "Z"
+            ScalarField componentX_;    // Компонента "X"
+            ScalarField componentY_;    // Компонента "Y"
+            ScalarField componentZ_;    // Компонента "Z"
             
         public :
             
@@ -241,7 +241,7 @@ namespace fluid
     {
         private :
             
-            ScalarField tempSF_;        // Временное скалярное поле
+            ScalarField tempSF_;    // Временное скалярное поле
             
         public :
             
@@ -302,7 +302,7 @@ namespace fluid
     {
         private :
             
-            ScalarField curStep_;       // Состояние поля на текущем шаге
+            ScalarField curStep_;   // Состояние поля на текущем шаге
             
         public :
             
@@ -344,6 +344,88 @@ namespace fluid
             // (2) Возвращает очередное приближение на всем поле
             void step(ScalarField& field, const ScalarField& free, 
                       Real alpha, Real betta);
+    };
+    
+    ////////// struct Values /////////////////////////////////////////////////
+    // Структура, предназначеная для передачи значений интерполируемой      //
+    // фунции в вершинах параллелепипеда со сторонами DX, DY, DZ.           //
+    //////////////////////////////////////////////////////////////////////////
+    
+    struct Values
+    {
+        public :
+            
+            Real fx0y0z0;       // Значение функции в вершине (x0, y0, z0)
+            Real fx0y0z1;       // Значение функции в вершине (x0, y0, z1)
+            Real fx0y1z0;       // Значение функции в вершине (x0, y1, z0)
+            Real fx0y1z1;       // Значение функции в вершине (x0, y1, z1)
+            Real fx1y0z0;       // Значение функции в вершине (x1, y0, z0)
+            Real fx1y0z1;       // Значение функции в вершине (x1, y0, z1)
+            Real fx1y1z0;       // Значение функции в вершине (x1, y1, z0)
+            Real fx1y1z1;       // Значение функции в вершине (x1, y1, z1)
+            
+        public :
+            
+            // (1) Конструктор (обнуляет поля)
+            Values();
+            
+            // (2) Конструктор копирования
+            Values(const Values& values) = default;
+            
+            // (3) Перегрузка оператора присваивания
+            Values& operator=(const Values& values) = default;
+            
+            // (4) Обнуляет поля
+            void clear();
+            
+            // (5) Деструктор
+            ~Values() = default;
+    };
+    
+    ////////// class Interpolation ///////////////////////////////////////////
+    // Предоставляет методы для вычисления значения в произвольной (не      //
+    // узловой) точке на скалярном поле. В данном случае используется метод //
+    // трилинейной интерполяции.                                            //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class Interpolation
+    {
+        private :
+            
+            Values values_;     // Набор значений "ф-ции" в вершинах
+            Real   a0_;         // Вспомогательные коэффициенты
+            Real   a1_;
+            Real   a2_;
+            Real   a3_;
+            Real   a4_;
+            Real   a5_;
+            Real   a6_;
+            Real   a7_;
+            
+        public :
+            
+            // (1) Конструктор
+            Interpolation();
+            
+            // (2) Конструктор копирования
+            Interpolation(const Interpolation& newObj) = default;
+            
+            // (3) Перегрузка оператора присваивания
+            Interpolation& operator=(const Interpolation& newObj) = default;
+            
+            // (4) Вычисляет приближенное значение  в (.) на поле "field"
+            Real compute(const ScalarField& field, Real x, Real y, Real z);
+            
+            // (5) Обнуляет поля
+            void clear();
+            
+            // (6) Деструктор
+            ~Interpolation() = default;
+            
+        private :
+            
+            // (1) Вычисляет приближенное значение  в (.), используя "values"
+            Real compute(Real x, Real y, Real z);
     };
     
     
