@@ -384,24 +384,13 @@ ScalarField::~ScalarField()
     {
         // Предотвращаем выброс исключения
     }
-}// (4) Перегрузка оператора присваиванияVectorField& VectorField::operator=(const VectorField& field)
-{
-    // Самоприсваивание
-    if (this != &field)
-    {
-        // Копируем данные
-        componentX = field.componentX;
-        componentY = field.componentY;
-        componentZ = field.componentZ;
-    }
-    return *this;
 }// (5) Изменяет размер поля, уничтожая всю информациюvoid VectorField::resize(int sizeX, int sizeY, int sizeZ)
 {
     try
     {
-        componentX.resize(sizeX, sizeY, sizeZ);
-        componentY.resize(sizeX, sizeY, sizeZ);
-        componentZ.resize(sizeX, sizeY, sizeZ);
+        componentX_.resize(sizeX, sizeY, sizeZ);
+        componentY_.resize(sizeX, sizeY, sizeZ);
+        componentZ_.resize(sizeX, sizeY, sizeZ);
     }
     catch (...)
     {
@@ -410,55 +399,97 @@ ScalarField::~ScalarField()
     }
 }// (6) Доступ по ссылке к скалярному полю "X"ScalarField& VectorField::x()
 {
-    return componentX;
+    return componentX_;
 }// (7) Доступ по ссылке к скалярному полю "Y"ScalarField& VectorField::y()
 {
-    return componentY;
+    return componentY_;
 }// (8) Доступ по ссылке к скалярному полю "Z"ScalarField& VectorField::z()
 {
-    return componentZ;
+    return componentZ_;
 }// (9) Доступ по "const" ссылке к скалярному полю "X"const ScalarField& VectorField::x() const
 {
-    return componentX;
+    return componentX_;
 }// (10) Доступ по "const" ссылке к скалярному полю "Y"const ScalarField& VectorField::y() const
 {
-    return componentY;
+    return componentY_;
 }// (11) Доступ по "const" ссылке к скалярному полю "Z"const ScalarField& VectorField::z() const
 {
-    return componentZ;
+    return componentZ_;
 }// (12) Возвращает размер по "X"int VectorField::getSizeX() const
 {
-    return componentX.getSizeX();
+    return componentX_.getSizeX();
 }// (13) Возвращает размер по "Y"int VectorField::getSizeY() const
 {
-    return componentY.getSizeY();
+    return componentY_.getSizeY();
 }// (14) Возвращает размер по "Z"int VectorField::getSizeZ() const
 {
-    return componentZ.getSizeZ();
+    return componentZ_.getSizeZ();
 }// (15) Перегрузка оператора "+="VectorField& VectorField::operator+=(const VectorField& field)
 {
-    componentX += field.componentX;
-    componentY += field.componentY;
-    componentZ += field.componentZ;
+    componentX_ += field.componentX_;
+    componentY_ += field.componentY_;
+    componentZ_ += field.componentZ_;
     return *this;
 }// (16) Перегрузка оператора "-="VectorField& VectorField::operator-=(const VectorField& field)
 {
-    componentX -= field.componentX;
-    componentY -= field.componentY;
-    componentZ -= field.componentZ;
+    componentX_ -= field.componentX_;
+    componentY_ -= field.componentY_;
+    componentZ_ -= field.componentZ_;
     return *this;
 }// (17) Освобождает выделенную памятьvoid VectorField::clear()
 {
-    componentX.clear();
-    componentY.clear();
-    componentZ.clear();
+    componentX_.clear();
+    componentY_.clear();
+    componentZ_.clear();
 }
 
 ////////// class Operator ////////////////////////////////////////////////////
 // Описание : fluidlib.h.                                                   //
 //////////////////////////////////////////////////////////////////////////////
 
-// (1) Градиент (Возвращает по ссылке векторное поле)
+////////// public ////////////////////////////////////////////////////////////
+
+// (2) Конструктор (Сразу задает размер вспомогательных полей)
+Operator::Operator(int sizeX, int sizeY, int sizeZ)
+{
+    try
+    {
+        resize(sizeX, sizeY, sizeZ);
+    }
+    catch (...)
+    {
+        // Предотвращаем выброс исключения
+    }
+}
+
+// (3) Конструктор копирования
+Operator::Operator(const Operator& newOperator)
+{
+    try
+    {
+        *this = newOperator;
+    }
+    catch (...)
+    {
+        // Предотвращаем выброс исключения
+    }
+}
+
+// (5) Устанавливается размер вспомогательных полей
+void Operator::resize(int sizeX, int sizeY, int sizeZ)
+{
+    try
+    {
+        tempSF_.resize(sizeX, sizeY, sizeZ);
+    }
+    catch (...)
+    {
+        clear();
+        throw;
+    }
+}
+
+// (6) Градиент (Возвращает по ссылке векторное поле)
 void Operator::grad(const ScalarField& inField, VectorField& outField)
 {
     derX(inField, outField.x());
@@ -466,19 +497,17 @@ void Operator::grad(const ScalarField& inField, VectorField& outField)
     derZ(inField, outField.z());
 }
 
-// (2) Дивергенция (Возвращает по ссылке скалярное поле)
+// (7) Дивергенция (Возвращает по ссылке скалярное поле)
 void Operator::div(const VectorField& inField, ScalarField& outField)
 {
-    ScalarField temp;   // Аларм! Аларм! Временно!
-    
     derX(inField.x(), outField);
-    derY(inField.y(), temp);
-    outField += temp;
-    derZ(inField.z(), temp);
-    outField += temp;
+    derY(inField.y(), tempSF_);
+    outField += tempSF_;
+    derZ(inField.z(), tempSF_);
+    outField += tempSF_;
 }
 
-// (3) Частная производная функции по "x" всюду
+// (8) Частная производная функции по "x" всюду
 void Operator::derX(const ScalarField& inField, ScalarField& outField)
 {
     for (int i = 0; i < outField.getSizeX(); ++i)
@@ -493,7 +522,7 @@ void Operator::derX(const ScalarField& inField, ScalarField& outField)
     }
 }
 
-// (4) Частная производная функции по "y" всюду
+// (9) Частная производная функции по "y" всюду
 void Operator::derY(const ScalarField& inField, ScalarField& outField)
 {
     for (int i = 0; i < outField.getSizeX(); ++i)
@@ -508,7 +537,7 @@ void Operator::derY(const ScalarField& inField, ScalarField& outField)
     }
 }
 
-// (5) Частная производная функции по "z" всюду
+// (10) Частная производная функции по "z" всюду
 void Operator::derZ(const ScalarField& inField, ScalarField& outField)
 {
     for (int i = 0; i < outField.getSizeX(); ++i)
@@ -523,7 +552,15 @@ void Operator::derZ(const ScalarField& inField, ScalarField& outField)
     }
 }
 
-// (6) Частная производная функции по "x" в точке
+// (11) Освобождает выделенную память
+void Operator::clear()
+{
+    tempSF_.clear();
+}
+
+////////// private ///////////////////////////////////////////////////////////
+
+// (1) Частная производная функции по "x" в точке
 Real Operator::derX(const ScalarField& inField, int& x, int& y, int& z)
 {
     if (inField.getSizeX() <= 1)
@@ -546,7 +583,7 @@ Real Operator::derX(const ScalarField& inField, int& x, int& y, int& z)
     }
 }
 
-// (7) Частная производная функции по "y"  в точке
+// (2) Частная производная функции по "y"  в точке
 Real Operator::derY(const ScalarField& inField, int& x, int& y, int& z)
 {
     if (inField.getSizeY() <= 1)
@@ -569,7 +606,7 @@ Real Operator::derY(const ScalarField& inField, int& x, int& y, int& z)
     }
 }
 
-// (8) Частная производная функции по "z"  в точке
+// (3) Частная производная функции по "z"  в точке
 Real Operator::derZ(const ScalarField& inField, int& x, int& y, int& z)
 {
     if (inField.getSizeZ() <= 1)
@@ -590,4 +627,160 @@ Real Operator::derZ(const ScalarField& inField, int& x, int& y, int& z)
     {
         return (inField(x, y, z - 1) - inField(x, y, z + 1)) / (2 * DZ);
     }
+}
+
+////////// class Poisson /////////////////////////////////////////////////////
+// Описание : fluidlib.h.                                                   //
+//////////////////////////////////////////////////////////////////////////////
+
+////////// public ////////////////////////////////////////////////////////////
+
+// (2) Конструктор (Сразу задает размер вспомогательных полей)
+Poisson::Poisson(int sizeX, int sizeY, int sizeZ)
+{
+    try
+    {
+        resize(sizeX, sizeY, sizeZ);
+    }
+    catch (...)
+    {
+        // Предотвращаем выброс исключения
+    }
+}
+
+// (3) Конструктор копирования
+Poisson::Poisson(const Poisson& newPoisson)
+{
+    try
+    {
+        *this = newPoisson;
+    }
+    catch (...)
+    {
+        // Предотвращаем выброс исключения
+    }
+}
+
+// (5) Устанавливается размер вспомогательных полей
+void Poisson::resize(int sizeX, int sizeY, int sizeZ)
+{
+    try
+    {
+        curStep_.resize(sizeX, sizeY, sizeZ);
+    }
+    catch (...)
+    {
+        clear();
+        throw;
+    }
+}
+
+// (6) Решает уравнение Пуассона; "free" - свободный член (Scalar)
+void Poisson::solve(ScalarField& field, const ScalarField& free, 
+                    Real alpha, Real betta)
+{
+    for (int i = 0; i < JACOBI_STEP_NUMBER; ++i)
+    {
+        step(field, free, alpha, betta);
+    }
+}
+
+// (7) Решает уравнение Пуассона; "free" - свободный член (Vector)
+void Poisson::solve(VectorField& field, const VectorField& free, 
+                    Real alpha, Real betta)
+{
+    solve(field.x(), free.x(), alpha, betta);
+    solve(field.y(), free.y(), alpha, betta);
+    solve(field.z(), free.z(), alpha, betta);
+}
+
+// (11) Освобождает выделенную память
+void Poisson::clear()
+{
+    curStep_.clear();
+}
+
+////////// private ///////////////////////////////////////////////////////////
+
+// (1) Возвращает очередное приближение в точке (i, j, k)
+Real Poisson::step(const ScalarField& field, const ScalarField& free, 
+                   Real alpha, Real betta, int i, int j, int k)
+{
+    Real cI = 0;
+    Real cJ = 0;
+    Real cK = 0;
+    
+    // Подбираем значения по "X", если его нет, доопределяем
+    if (!field.isInRange(i + 1, j, k))
+    {
+        cI += field(i, j, k);
+    }
+    else
+    {
+        cI += field(i + 1, j, k);
+    }
+    if (!field.isInRange(i - 1, j, k))
+    {
+        cI += field(i, j, k);
+    }
+    else
+    {
+        cI += field(i - 1, j, k);
+    }
+    
+    // Подбираем значения по "Y", если его нет, доопределяем
+    if (!field.isInRange(i, j + 1, k))
+    {
+        cJ += field(i, j, k);
+    }
+    else
+    {
+        cJ += field(i, j + 1, k);
+    }
+    if (!field.isInRange(i, j - 1, k))
+    {
+        cJ += field(i, j, k);
+    }
+    else
+    {
+        cJ += field(i, j - 1, k);
+    }
+    
+    // Подбираем значения по "Z", если его нет, доопределяем
+    if (!field.isInRange(i, j, k + 1))
+    {
+        cK += field(i, j, k);
+    }
+    else
+    {
+        cK += field(i, j, k + 1);
+    }
+    if (!field.isInRange(i, j, k - 1))
+    {
+        cK += field(i, j, k);
+    }
+    else
+    {
+        cK += field(i, j, k - 1);
+    }
+    
+    // Вычисляем очередное приближение в точке (i, j, k)
+    return (cI + cJ + cK + alpha * free(i, j, k)) / betta;
+}
+
+// (2) Возвращает очередное приближение на всем поле
+void Poisson::step(ScalarField& field, const ScalarField& free, 
+                   Real alpha, Real betta)
+{
+    for (int i = 0; i < field.getSizeX(); ++i)
+    {
+        for (int j = 0; j < field.getSizeY(); ++j)
+        {
+            for (int k = 0; k < field.getSizeZ(); ++k)
+            {
+                curStep_(i, j, k) = step(field, free, alpha, betta, i, j, k);
+            }
+        }
+    }
+    field = curStep_;
 }
