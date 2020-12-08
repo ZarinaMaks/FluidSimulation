@@ -25,6 +25,9 @@ namespace fluid
     const int MAX_SIZE_Z = 1000;
     const int MIN_SIZE_Z = 1;
     
+    // Количество шагов для метода итераций Якоби
+    const int JACOBI_STEP_NUMBER = 100;
+    
     // Приращения аргументов
     const Real DS = 1.0;
     const Real DX = DS;
@@ -168,9 +171,9 @@ namespace fluid
     {
         private :
             
-            ScalarField componentX;     // Компонента "X"
-            ScalarField componentY;     // Компонента "Y"
-            ScalarField componentZ;     // Компонента "Z"
+            ScalarField componentX_;     // Компонента "X"
+            ScalarField componentY_;     // Компонента "Y"
+            ScalarField componentZ_;     // Компонента "Z"
             
         public :
             
@@ -184,7 +187,7 @@ namespace fluid
             VectorField(const VectorField& field);
             
             // (4) Перегрузка оператора присваивания
-            VectorField& operator=(const VectorField& field);
+            VectorField& operator=(const VectorField& field) = default;
             
             // (5) Изменяет размер поля, уничтожая всю информацию
             void resize(int sizeX, int sizeY, int sizeZ);
@@ -238,34 +241,112 @@ namespace fluid
     {
         private :
             
-            // Поля... Алармы сюда!
+            ScalarField tempSF_;        // Временное скалярное поле
             
         public :
             
-            // (1) Градиент (Возвращает по ссылке векторное поле)
+            // (1) Конструктор
+            Operator() = default;
+            
+            // (2) Конструктор (Сразу задает размер вспомогательных полей)
+            Operator(int sizeX, int sizeY, int sizeZ);
+            
+            // (3) Конструктор копирования
+            Operator(const Operator& newOperator);
+            
+            // (4) Перегрузка оператора присваивания
+            Operator& operator=(const Operator& newOperator) = default;
+            
+            // (5) Устанавливается размер вспомогательных полей
+            void resize(int sizeX, int sizeY, int sizeZ);
+            
+            // (6) Градиент (Возвращает по ссылке векторное поле)
             void grad(const ScalarField& inField, VectorField& outField);
             
-            // (2) Дивергенция (Возвращает по ссылке скалярное поле)
+            // (7) Дивергенция (Возвращает по ссылке скалярное поле)
             void div(const VectorField& inField, ScalarField& outField);
             
-            // (3) Частная производная функции по "x" всюду
+            // (8) Частная производная функции по "x" всюду
             void derX(const ScalarField& inField, ScalarField& outField);
             
-            // (4) Частная производная функции по "y" всюду
+            // (9) Частная производная функции по "y" всюду
             void derY(const ScalarField& inField, ScalarField& outField);
             
-            // (5) Частная производная функции по "z" всюду
+            // (10) Частная производная функции по "z" всюду
             void derZ(const ScalarField& inField, ScalarField& outField);
             
-            // (6) Частная производная функции по "x" в точке
+            // (11) Освобождает выделенную память
+            void clear();
+            
+            // (12) Деструктор
+            ~Operator() = default;
+            
+        private :
+            
+            // (1) Частная производная функции по "x" в точке
             Real derX(const ScalarField& inField, int& x, int& y, int& z);
             
-            // (7) Частная производная функции по "y"  в точке
+            // (2) Частная производная функции по "y"  в точке
             Real derY(const ScalarField& inField, int& x, int& y, int& z);
             
-            // (8) Частная производная функции по "z"  в точке
+            // (3) Частная производная функции по "z"  в точке
             Real derZ(const ScalarField& inField, int& x, int& y, int& z);
     };
+    
+    ////////// class Poisson /////////////////////////////////////////////////
+    // Позволяет решать уравнение Пуассона для векторных и скалярных полей  //
+    // методом итераций Якоби.                                              //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class Poisson
+    {
+        private :
+            
+            ScalarField curStep_;       // Состояние поля на текущем шаге
+            
+        public :
+            
+            // (1) Конструктор
+            Poisson() = default;
+            
+            // (2) Конструктор (Сразу задает размер вспомогательных полей)
+            Poisson(int sizeX, int sizeY, int sizeZ);
+            
+            // (3) Конструктор копирования
+            Poisson(const Poisson& newPoisson);
+            
+            // (4) Перегрузка оператора присваивания
+            Poisson& operator=(const Poisson& newPoisson) = default;
+            
+            // (5) Устанавливается размер вспомогательных полей
+            void resize(int sizeX, int sizeY, int sizeZ);
+            
+            // (6) Решает уравнение Пуассона; "free" - свободный член (Scalar)
+            void solve(ScalarField& field, const ScalarField& free, 
+                       Real alpha, Real betta);
+            
+            // (7) Решает уравнение Пуассона; "free" - свободный член (Vector)
+            void solve(VectorField& field, const VectorField& free,
+                       Real alpha, Real betta);
+            
+            // (8) Освобождает выделенную память
+            void clear();
+            
+            // (9) Деструктор
+            ~Poisson() = default;
+            
+        private :
+            
+            // (1) Возвращает очередное приближение в точке (i, j, k)
+            Real step(const ScalarField& field, const ScalarField& free, 
+                      Real alpha, Real betta, int i, int j, int k);
+            
+            // (2) Возвращает очередное приближение на всем поле
+            void step(ScalarField& field, const ScalarField& free, 
+                      Real alpha, Real betta);
+    };
+    
+    
 }
 
 #endif
