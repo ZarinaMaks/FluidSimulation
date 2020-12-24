@@ -1,0 +1,7 @@
+g++ -c errlib.cpp -I../headers
+g++ -c basiclib.cpp -I../headers
+g++ -c componentlib2d.cpp -I../headers
+g++ -c componentlib3d.cpp -I../headers
+g++ -c toolslib.cpp -I../headers
+g++ -c test.cpp -I../headers
+g++ test.o errlib.o basiclib.o componentlib2d.o componentlib3d.o toolslib.o -o test
