@@ -1,0 +1,3 @@
+[(errlib), (basiclib)] ---> (componentlib2d)
+[(errlib), (basiclib)] ---> (componentlib3d)
+[(errlib), (basiclib), (componentlib2d), (componentlib3d)] ---> (toolslib)
