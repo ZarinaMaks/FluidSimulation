@@ -13,15 +13,15 @@ namespace fluid
     
     // Максимальный и минимальный размеры поля "Field" по "X"
     const int MAX_SIZE_X = 1000;
-    const int MIN_SIZE_X = 2;
+    const int MIN_SIZE_X = 3;
     
     // Максимальный и минимальный размеры поля "Field" по "Y"
     const int MAX_SIZE_Y = 1000;
-    const int MIN_SIZE_Y = 2;
+    const int MIN_SIZE_Y = 3;
     
     // Максимальный и минимальный размеры поля "Field" по "Z"
     const int MAX_SIZE_Z = 1000;
-    const int MIN_SIZE_Z = 2;
+    const int MIN_SIZE_Z = 3;
     
     // Количество шагов для метода итераций Якоби
     const int JACOBI_STEP_NUMBER = 100;
