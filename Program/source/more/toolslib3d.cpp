@@ -3,7 +3,7 @@
 // Дата     : ??.??.2020                                                    //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "toolslib.h"
+#include "toolslib3d.h"
 
 using namespace fluid;
 
@@ -13,18 +13,14 @@ using namespace fluid;
 
 ////////// public ////////////////////////////////////////////////////////////
 
-// (3) Конструктор копирования
-Operator::Operator(const Operator& newOperator)
-{
-    *this = newOperator;
-}
-
-// (4) Устанавливается размер вспомогательного 2D поля
-void Operator::resize2D(int sizeX, int sizeY)
+// (4) Инициализация вспомогательных 2D полей
+void Operator::initialize2D(const WorkZone2D& area)
 {
     try
     {
-        tempSF2D_.resize(sizeX, sizeY);
+        tempSF2D_.resize(area.getSizeX(), area.getSizeY());
+        area2D_.resize(area.getSizeX(), area.getSizeY());
+        area2D_ = area;
     }
     catch (...)
     {
@@ -33,12 +29,14 @@ void Operator::resize2D(int sizeX, int sizeY)
     }
 }
 
-// (5) Устанавливается размер вспомогательного 3D поля
-void Operator::resize3D(int sizeX, int sizeY, int sizeZ)
+// (5) Инициализация вспомогательных 3D полей
+void Operator::initialize3D(const WorkZone3D& area)
 {
     try
     {
-        tempSF3D_.resize(sizeX, sizeY, sizeZ);
+        tempSF3D_.resize(area.getSizeX(), area.getSizeY(), area.getSizeZ());
+        area3D_.resize(area.getSizeX(), area.getSizeY(), area.getSizeZ());
+        area3D_ = area;
     }
     catch (...)
     {
@@ -87,7 +85,10 @@ void Operator::derX(const ScalarField2D& inField, ScalarField2D& outField)
     {
         for (int j = 0; j < outField.getSizeY(); ++j)
         {
-            outField(i, j) = derX(inField, i, j);
+            if (area2D_(i, j))
+            {
+                outField(i, j) = derX(inField, i, j);
+            }
         }
     }
 }
@@ -99,7 +100,10 @@ void Operator::derY(const ScalarField2D& inField, ScalarField2D& outField)
     {
         for (int j = 0; j < outField.getSizeY(); ++j)
         {
-            outField(i, j) = derY(inField, i, j);
+            if (area2D_(i, j))
+            {
+                outField(i, j) = derY(inField, i, j);
+            }
         }
     }
 }
@@ -113,7 +117,10 @@ void Operator::derX(const ScalarField3D& inField, ScalarField3D& outField)
         {
             for (int k = 0; k < outField.getSizeZ(); ++k)
             {
-                outField(i, j, k) = derX(inField, i, j, k);
+                if (area3D_(i, j, k))
+                {
+                    outField(i, j, k) = derX(inField, i, j, k);
+                }
             }
         }
     }
@@ -128,7 +135,10 @@ void Operator::derY(const ScalarField3D& inField, ScalarField3D& outField)
         {
             for (int k = 0; k < outField.getSizeZ(); ++k)
             {
-                outField(i, j, k) = derY(inField, i, j, k);
+                if (area3D_(i, j, k))
+                {
+                    outField(i, j, k) = derY(inField, i, j, k);
+                }
             }
         }
     }
@@ -143,7 +153,10 @@ void Operator::derZ(const ScalarField3D& inField, ScalarField3D& outField)
         {
             for (int k = 0; k < outField.getSizeZ(); ++k)
             {
-                outField(i, j, k) = derZ(inField, i, j, k);
+                if (area3D_(i, j, k))
+                {
+                    outField(i, j, k) = derZ(inField, i, j, k);
+                }
             }
         }
     }
@@ -154,98 +167,40 @@ void Operator::clear()
 {
     tempSF2D_.clear();
     tempSF3D_.clear();
+    area2D_.clear();
+    area3D_.clear();
 }
 
 ////////// private ///////////////////////////////////////////////////////////
 
-// (1) 2D Частная производная функции по "x" в точке
+// (1) 2D Частная производная функции по "x" в точке (x, y)
 Real Operator::derX(const ScalarField2D& inField, int x, int y)
 {
-    if (x == 0)
-    {
-        return (inField(x + 1, y) - inField(x, y)) / DX;
-    }
-    else
-    if (x == inField.getSizeX() - 1)
-    {
-        return (inField(x, y) - inField(x - 1, y)) / DX;
-    }
-    else
-    {
-        return (inField(x + 1, y) - inField(x - 1, y)) / (2 * DX);
-    }
+    return (inField(x + 1, y) - inField(x - 1, y)) / (2 * DX);
 }
 
-// (2) 2D Частная производная функции по "y"  в точке
+// (2) 2D Частная производная функции по "y"  в точке (x, y)
 Real Operator::derY(const ScalarField2D& inField, int x, int y)
 {
-    if (y == 0)
-    {
-        return (inField(x, y + 1) - inField(x, y)) / DY;
-    }
-    else
-    if (y == inField.getSizeY() - 1)
-    {
-        return (inField(x, y) - inField(x, y - 1)) / DY;
-    }
-    else
-    {
-        return (inField(x, y + 1) - inField(x, y - 1)) / (2 * DY);
-    }
+    return (inField(x, y + 1) - inField(x, y - 1)) / (2 * DY);
 }
 
-// (3) 3D Частная производная функции по "x" в точке
+// (3) 3D Частная производная функции по "x" в точке (x, y, z)
 Real Operator::derX(const ScalarField3D& inField, int x, int y, int z)
 {
-    if (x == 0)
-    {
-        return (inField(x + 1, y, z) - inField(x, y, z)) / DX;
-    }
-    else
-    if (x == inField.getSizeX() - 1)
-    {
-        return (inField(x, y, z) - inField(x - 1, y, z)) / DX;
-    }
-    else
-    {
-        return (inField(x + 1, y, z) - inField(x - 1, y, z)) / (2 * DX);
-    }
+    return (inField(x + 1, y, z) - inField(x - 1, y, z)) / (2 * DX);
 }
 
-// (4) 3D Частная производная функции по "y"  в точке
+// (4) 3D Частная производная функции по "y"  в точке (x, y, z)
 Real Operator::derY(const ScalarField3D& inField, int x, int y, int z)
 {
-    if (y == 0)
-    {
-        return (inField(x, y + 1, z) - inField(x, y, z)) / DY;
-    }
-    else
-    if (y == inField.getSizeY() - 1)
-    {
-        return (inField(x, y, z) - inField(x, y - 1, z)) / DY;
-    }
-    else
-    {
-        return (inField(x, y + 1, z) - inField(x, y - 1, z)) / (2 * DY);
-    }
+    return (inField(x, y + 1, z) - inField(x, y - 1, z)) / (2 * DY);
 }
 
-// (5) 3D Частная производная функции по "z"  в точке
+// (5) 3D Частная производная функции по "z"  в точке (x, y, z)
 Real Operator::derZ(const ScalarField3D& inField, int x, int y, int z)
 {
-    if (z == 0)
-    {
-        return (inField(x, y, z + 1) - inField(x, y, z)) / DZ;
-    }
-    else
-    if (z == inField.getSizeZ() - 1)
-    {
-        return (inField(x, y, z) - inField(x, y, z - 1)) / DZ;
-    }
-    else
-    {
-        return (inField(x, y, z + 1) - inField(x, y, z - 1)) / (2 * DZ);
-    }
+    return (inField(x, y, z + 1) - inField(x, y, z - 1)) / (2 * DZ);
 }
 
 ////////// class Poisson /////////////////////////////////////////////////////

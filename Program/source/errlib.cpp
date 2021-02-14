@@ -9,40 +9,44 @@
 
 using namespace err;
 
-////////// class FluidException //////////////////////////////////////////////
+////////// class Exception ///////////////////////////////////////////////////
 // Описание : errlib.h                                                      //
 //////////////////////////////////////////////////////////////////////////////
 
 // (1) Конструктор (обнуляет поле)
-FluidException::FluidException()
+Exception::Exception()
 {
     errCode_ = 0;
 }
 
 // (2) Конструктор (инициализирует поле)
-FluidException::FluidException(const int& newErrCode)
+Exception::Exception(int newErrCode)
 {
     errCode_ = newErrCode;
 }
 
-// (3) Конструктор копирования
-FluidException::FluidException(const FluidException& exception)
-{
-    *this = exception;
-}
-
-// (4) Перегрузка оператора присваивания
-FluidException& FluidException::operator=(const FluidException& exception)
-{
-    if (&exception != this)
-    {
-        errCode_ = exception.errCode_;
-    }
-    return *this;
-}
-
 // (5) Возвращает код ошибки
-int FluidException::error() const
+int Exception::error() const
 {
     return errCode_;
+}
+
+////////// class FluidException //////////////////////////////////////////////
+// Описание : errlib.h                                                      //
+//////////////////////////////////////////////////////////////////////////////
+
+// (5) Виртуальный метод возврата сообщения об ошибке
+const char* FluidException::what() const noexcept
+{
+    return "err::FluidException";
+}
+
+////////// class FioException ////////////////////////////////////////////////
+// Описание : errlib.h                                                      //
+//////////////////////////////////////////////////////////////////////////////
+
+// (5) Виртуальный метод возврата сообщения об ошибке
+const char* FioException::what() const noexcept
+{
+    return "err::FioException";
 }

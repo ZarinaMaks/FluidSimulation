@@ -7,44 +7,28 @@
 
 using namespace fluid;
 
-////////// class ScalarField2D ///////////////////////////////////////////////
+////////// class SField2D ////////////////////////////////////////////////////
 // Описание : componentlib2d.h.                                             //
 //////////////////////////////////////////////////////////////////////////////
 
-// (1) Конструктор (обнуляет поля класса)
-ScalarField2D::ScalarField2D()
+// (1) Конструктор (обнуляет поля)
+SField2D::SField2D()
 {
     points_ = nullptr;
     sizeX_  = 0;
     sizeY_  = 0;
 }
 
-// (2) Конструктор (Сразу задает размер поля)
-ScalarField2D::ScalarField2D(int sizeX, int sizeY)
-{
-    try
-    {
-        points_ = nullptr;
-        sizeX_  = 0;
-        sizeY_  = 0;
-        resize(sizeX, sizeY);
-    }
-    catch (...)
-    {
-        // Предотвращаем выброс исключения
-    }
-}
-
-// (3) Конструктор копирования
-ScalarField2D::ScalarField2D(const ScalarField2D& field)
+// (2) Конструктор копирования
+SField2D::SField2D(const SField2D& field)
 {
     *this = field;
 }
 
-// (4) Перегрузка оператора присваивания
-ScalarField2D& ScalarField2D::operator=(const ScalarField2D& field)
+// (3) Перегрузка оператора присваивания
+SField2D& SField2D::operator=(const SField2D& field)
 {
-    // Самоприсваивание
+    // Нет самоприсваивания
     if (this != &field)
     {
         try
@@ -69,8 +53,8 @@ ScalarField2D& ScalarField2D::operator=(const ScalarField2D& field)
     return *this;
 }
 
-// (5) Изменяет размер поля, уничтожая всю информацию
-void ScalarField2D::resize(int sizeX, int sizeY)
+// (4) Изменяет размер поля, уничтожая всю информацию
+void SField2D::resize(int sizeX, int sizeY)
 {
     // Если размеры массивов отличаются
     bool hasDiff   = sizeX_ != sizeX || sizeY_ != sizeY;
@@ -91,11 +75,15 @@ void ScalarField2D::resize(int sizeX, int sizeY)
             sizeY_ = sizeY;
             
             // Выделение новой памяти
-            points_ = new Real*[sizeX_];
+            points_ = new Point*[sizeX_];
             for (int i = 0; i < sizeX_; ++i)
             {
-                points_[i] = new Real[sizeY_];
+                points_[i] = new Point[sizeY_];
             }
+            
+            // Обновляем значения в массиве
+            resetField(0);
+            resetArea(false);
         }
     }
     catch (...)
@@ -105,102 +93,120 @@ void ScalarField2D::resize(int sizeX, int sizeY)
     }
 }
 
-// (6) Перегрузка оператора ()
-Real& ScalarField2D::operator()(int x, int y)
+// (5) Доступ к величинам на поле
+Real& SField2D::field(int x, int y)
 {
     // Выброс исключения, если был выход за границы
     if (!isInRange(x, y))
     {
         throw err::FluidException(1);
     }
-    return points_[x][y];
+    
+    // Иначе возвращаем элемент
+    return points_[x][y].value;
 }
 
-// (7) Перегрузка оператора () (const случай)
-const Real& ScalarField2D::operator()(int x, int y) const
+// (6) Доступ к величинам на поле (const)
+const Real& SField2D::field(int x, int y) const
 {
     // Выброс исключения, если был выход за границы
     if (!isInRange(x, y))
     {
         throw err::FluidException(1);
     }
-    return points_[x][y];
+    
+    // Иначе возвращаем элемент
+    return points_[x][y].value;
 }
 
-// (8) Проверка на выход за границы
-bool ScalarField2D::isInRange(int x, int y) const
+// (7) Доступ к области задания
+bool& SField2D::area(int x, int y)
+{
+    // Выброс исключения, если был выход за границы
+    if (!isInRange(x, y))
+    {
+        throw err::FluidException(1);
+    }
+    
+    // Иначе возвращаем элемент
+    return points_[x][y].isInArea;
+}
+
+// (8) Доступ к области задания (const)
+const bool& SField2D::area(int x, int y) const
+{
+    // Выброс исключения, если был выход за границы
+    if (!isInRange(x, y))
+    {
+        throw err::FluidException(1);
+    }
+    
+    // Иначе возвращаем элемент
+    return points_[x][y].isInArea;
+}
+
+// (9) Проверка на выход за границы
+bool SField2D::isInRange(int x, int y) const
 {
     // Если значения аргументов корректны
     bool isInRangeX = x < sizeX_ && x >= 0;
     bool isInRangeY = y < sizeY_ && y >= 0;
-        
+    
     return isInRangeX && isInRangeY;
 }
 
-// (9) Возвращает размер по "X"
-int ScalarField2D::getSizeX() const
+// (10) Возвращает размер по "x"
+int SField2D::getSizeX() const
 {
     return sizeX_;
 }
 
-// (10) Возвращает размер по "Y"
-int ScalarField2D::getSizeY() const
+// (11) Возвращает размер по "y"
+int SField2D::getSizeY() const
 {
     return sizeY_;
 }
 
-// (11) Перегрузка оператора "+="
-ScalarField2D& ScalarField2D::operator+=(const ScalarField2D& field)
+// (12) Обновляет значения величин на поле
+void SField2D::resetField(Real newValue)
 {
-    // Совпадают ли размеры полей?
-    bool haveMatchX = (sizeX_ == field.getSizeX());
-    bool haveMatchY = (sizeY_ == field.getSizeY());
-    
-    // Добавить, если совпадают
-    if (haveMatchX && haveMatchY)
+    // Обновление всех элементов поля
+    if (points_ != nullptr)
     {
         for (int i = 0; i < sizeX_; ++i)
         {
-            for (int j = 0; j < sizeY_; ++j)
+            if (points_[i] != nullptr)
             {
-                points_[i][j] += field.points_[i][j];
+                for (int j = 0; j < sizeY_; ++j)
+                {
+                    points_[i][j].value = newValue;
+                }
             }
         }
     }
-    else
-    {
-        throw err::FluidException(2);
-    }
-    return *this;
 }
 
-// (12) Перегрузка оператора "-="
-ScalarField2D& ScalarField2D::operator-=(const ScalarField2D& field)
+// (13) Обновляет область задания
+void SField2D::resetArea(bool newValue)
 {
-    // Совпадают ли размеры полей?
-    bool haveMatchX = (sizeX_ == field.getSizeX());
-    bool haveMatchY = (sizeY_ == field.getSizeY());
-    
-    // Вычесть, если совпадают
-    if (haveMatchX && haveMatchY)
+    // Обновление всех элементов поля
+    if (points_ != nullptr)
     {
         for (int i = 0; i < sizeX_; ++i)
         {
-            for (int j = 0; j < sizeY_; ++j)
+            if (points_[i] != nullptr)
             {
-                points_[i][j] -= field.points_[i][j];
+                for (int j = 0; j < sizeY_; ++j)
+                {
+                    points_[i][j].isInArea = newValue;
+                }
             }
         }
     }
-    else
-    {
-        throw err::FluidException(2);
-    }
-    return *this;
 }
 
-// (13) Освобождает выделенную память
-void ScalarField2D::clear()
+// (14) Освобождает выделенную память
+void SField2D::clear()
 {
     // Освобождение памяти
     if (points_ != nullptr)
@@ -221,37 +227,18 @@ void ScalarField2D::clear()
     sizeY_ = 0;
 }
 
-// (14) Деструктор
-ScalarField2D::~ScalarField2D()
+// (15) Деструктор
+SField2D::~SField2D()
 {
     clear();
 }
 
-////////// class VectorField2D ///////////////////////////////////////////////
+////////// class VField2D ////////////////////////////////////////////////////
 // Описание : componentlib2d.h.                                             //
 //////////////////////////////////////////////////////////////////////////////
 
-// (2) Конструктор (Сразу задает размер поля)
-VectorField2D::VectorField2D(int sizeX, int sizeY)
-{
-    try
-    {
-        resize(sizeX, sizeY);
-    }
-    catch (...)
-    {
-        // Предотвращаем выброс исключения
-    }
-}
-
-// (3) Конструктор копирования
-VectorField2D::VectorField2D(const VectorField2D& field)
-{
-    *this = field;
-}
-
-// (5) Изменяет размер поля, уничтожая всю информацию
-void VectorField2D::resize(int sizeX, int sizeY)
+// (4) Изменяет размер поля, уничтожая всю информацию
+void VField2D::resize(int sizeX, int sizeY)
 {
     try
     {
@@ -261,63 +248,48 @@ void VectorField2D::resize(int sizeX, int sizeY)
     catch (...)
     {
         clear();
+        throw;
     }
 }
 
-// (6) Доступ по ссылке к скалярному полю "X"
-ScalarField2D& VectorField2D::x()
+// (5) Доступ по ссылке к скалярному полю "x"
+SField2D& VField2D::x()
 {
     return componentX_;
 }
 
-// (7) Доступ по ссылке к скалярному полю "Y"
-ScalarField2D& VectorField2D::y()
+// (6) Доступ по ссылке к скалярному полю "y"
+SField2D& VField2D::y()
 {
     return componentY_;
 }
 
-// (8) Доступ по "const" ссылке к скалярному полю "X"
-const ScalarField2D& VectorField2D::x() const
+// (7) Доступ по "const" ссылке к скалярному полю "x"
+const SField2D& VField2D::x() const
 {
     return componentX_;
 }
 
-// (9) Доступ по "const" ссылке к скалярному полю "Y"
-const ScalarField2D& VectorField2D::y() const
+// (8) Доступ по "const" ссылке к скалярному полю "y"
+const SField2D& VField2D::y() const
 {
     return componentY_;
 }
 
-// (10) Возвращает размер по "X"
-int VectorField2D::getSizeX() const
+// (9) Возвращает размер по "x"
+int VField2D::getSizeX() const
 {
     return componentX_.getSizeX();
 }
 
-// (11) Возвращает размер по "Y"
-int VectorField2D::getSizeY() const
+// (10) Возвращает размер по "y"
+int VField2D::getSizeY() const
 {
     return componentX_.getSizeY();
 }
 
-// (12) Перегрузка оператора "+="
-VectorField2D& VectorField2D::operator+=(const VectorField2D& field)
-{
-    componentX_ += field.componentX_;
-    componentY_ += field.componentY_;
-    return *this;
-}
-
-// (13) Перегрузка оператора "-="
-VectorField2D& VectorField2D::operator-=(const VectorField2D& field)
-{
-    componentX_ -= field.componentX_;
-    componentY_ -= field.componentY_;
-    return *this;
-}
-
-// (14) Освобождает выделенную память
-void VectorField2D::clear()
+// (11) Освобождает выделенную память
+void VField2D::clear()
 {
     componentX_.clear();
     componentY_.clear();

@@ -25,9 +25,9 @@ namespace fluid
         private :
             
             Real*** points_;        // Трехмерный массив элементов поля
-            int     sizeX_;         // Размер поля по "X"
-            int     sizeY_;         // Размер поля по "Y"
-            int     sizeZ_;         // Размер поля по "Z"
+            int     sizeX_;         // Размер поля по "x"
+            int     sizeY_;         // Размер поля по "y"
+            int     sizeZ_;         // Размер поля по "z"
             
         public :
             
@@ -55,25 +55,19 @@ namespace fluid
             // (8) Проверка на выход за границы
             bool isInRange(int x, int y, int z) const;
             
-            // (9) Возвращает размер по "X"
+            // (9) Возвращает размер по "x"
             int getSizeX() const;
             
-            // (10) Возвращает размер по "Y"
+            // (10) Возвращает размер по "y"
             int getSizeY() const;
             
-            // (11) Возвращает размер по "Z"
+            // (11) Возвращает размер по "z"
             int getSizeZ() const;
             
-            // (12) Перегрузка оператора "+="
-            ScalarField3D& operator+=(const ScalarField3D& field);
-            
-            // (13) Перегрузка оператора "-="
-            ScalarField3D& operator-=(const ScalarField3D& field);
-            
-            // (14) Освобождает выделенную память
+            // (12) Освобождает выделенную память
             void clear();
             
-            // (15) Деструктор
+            // (13) Деструктор
             ~ScalarField3D();
     };
     
@@ -85,9 +79,9 @@ namespace fluid
     {
         private :
             
-            ScalarField3D componentX_;  // Компонента "X"
-            ScalarField3D componentY_;  // Компонента "Y"
-            ScalarField3D componentZ_;  // Компонента "Z"
+            ScalarField3D componentX_;  // Компонента "x"
+            ScalarField3D componentY_;  // Компонента "y"
+            ScalarField3D componentZ_;  // Компонента "z"
             
         public :
             
@@ -106,43 +100,37 @@ namespace fluid
             // (5) Изменяет размер поля, уничтожая всю информацию
             void resize(int sizeX, int sizeY, int sizeZ);
             
-            // (6) Доступ по ссылке к скалярному полю "X"
+            // (6) Доступ по ссылке к скалярному полю "x"
             ScalarField3D& x();
             
-            // (7) Доступ по ссылке к скалярному полю "Y"
+            // (7) Доступ по ссылке к скалярному полю "y"
             ScalarField3D& y();
             
-            // (8) Доступ по ссылке к скалярному полю "Z"
+            // (8) Доступ по ссылке к скалярному полю "z"
             ScalarField3D& z();
             
-            // (9) Доступ по "const" ссылке к скалярному полю "X"
+            // (9) Доступ по "const" ссылке к скалярному полю "x"
             const ScalarField3D& x() const;
             
-            // (10) Доступ по "const" ссылке к скалярному полю "Y"
+            // (10) Доступ по "const" ссылке к скалярному полю "y"
             const ScalarField3D& y() const;
             
-            // (11) Доступ по "const" ссылке к скалярному полю "Z"
+            // (11) Доступ по "const" ссылке к скалярному полю "z"
             const ScalarField3D& z() const;
             
-            // (12) Возвращает размер по "X"
+            // (12) Возвращает размер по "x"
             int getSizeX() const;
             
-            // (13) Возвращает размер по "Y"
+            // (13) Возвращает размер по "y"
             int getSizeY() const;
             
-            // (14) Возвращает размер по "Z"
+            // (14) Возвращает размер по "z"
             int getSizeZ() const;
             
-            // (15) Перегрузка оператора "+="
-            VectorField3D& operator+=(const VectorField3D& field);
-            
-            // (16) Перегрузка оператора "-="
-            VectorField3D& operator-=(const VectorField3D& field);
-            
-            // (17) Освобождает выделенную память
+            // (15) Освобождает выделенную память
             void clear();
             
-            // (18) Деструктор
+            // (16) Деструктор
             ~VectorField3D() = default;
     };
     
@@ -180,6 +168,69 @@ namespace fluid
             
             // (5) Деструктор
             ~Values3D() = default;
+    };
+    
+    ////////// class WorkZone3D //////////////////////////////////////////////
+    // Класс, который хранит информацию, о рабочих зонах в поле. Если точка //
+    // (x, y, z) помечена как "true", то она принадлежит рабочей зоне,      //
+    // иначе не принадлежит и соответственно не обрабатывается в            //
+    // соответствующих частях программы.                                    //
+    //                                                                      //
+    // В общем случае :                                                     //
+    //  1) MIN_SIZE_X <= sizeX_ <= MAX_SIZE_X                               //
+    //  2) MIN_SIZE_Y <= sizeY_ <= MAX_SIZE_Y                               //
+    //  3) MIN_SIZE_Z <= sizeZ_ <= MAX_SIZE_Z                               //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class WorkZone3D
+    {
+        private :
+            
+            bool*** points_;    // Трехмерный массив
+            int     sizeX_;     // Размер поля по "x"
+            int     sizeY_;     // Размер поля по "y"
+            int     sizeZ_;     // Размер поля по "z"
+            
+        public :
+            
+            // (1) Конструктор (обнуляет поля класса)
+            WorkZone3D();
+            
+            // (2) Конструктор (Сразу задает размер поля)
+            WorkZone3D(int sizeX, int sizeY);
+            
+            // (3) Конструктор копирования
+            WorkZone3D(const WorkZone3D& field);
+            
+            // (4) Перегрузка оператора присваивания
+            WorkZone3D& operator=(const WorkZone3D& field);
+            
+            // (5) Изменяет размер поля, уничтожая всю информацию
+            void resize(int sizeX, int sizeY, int sizeZ);
+            
+            // (6) Перегрузка оператора ()
+            bool& operator()(int x, int y, int z);
+            
+            // (7) Перегрузка оператора () (const случай)
+            const bool& operator()(int x, int y, int z) const;
+            
+            // (8) Проверка на выход за границы
+            bool isInRange(int x, int y, int z) const;
+            
+            // (9) Возвращает размер по "x"
+            int getSizeX() const;
+            
+            // (10) Возвращает размер по "y"
+            int getSizeY() const;
+            
+            // (11) Возвращает размер по "z"
+            int getSizeZ() const;
+            
+            // (12) Освобождает выделенную память
+            void clear();
+            
+            // (13) Деструктор
+            ~WorkZone3D();
     };
 }
 
