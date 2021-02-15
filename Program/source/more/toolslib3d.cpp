@@ -3,7 +3,7 @@
 // Дата     : ??.??.2020                                                    //
 //////////////////////////////////////////////////////////////////////////////
 
-#include "toolslib.h"
+#include "toolslib3d.h"
 
 using namespace fluid;
 
@@ -13,18 +13,14 @@ using namespace fluid;
 
 ////////// public ////////////////////////////////////////////////////////////
 
-// (3) Конструктор копирования
-Operator::Operator(const Operator& newOperator)
-{
-    *this = newOperator;
-}
-
-// (4) Устанавливается размер вспомогательного 2D поля
-void Operator::resize2D(int sizeX, int sizeY)
+// (4) Инициализация вспомогательных 2D полей
+void Operator::initialize2D(const WorkZone2D& area)
 {
     try
     {
-        tempSF2D_.resize(sizeX, sizeY);
+        tempSF2D_.resize(area.getSizeX(), area.getSizeY());
+        area2D_.resize(area.getSizeX(), area.getSizeY());
+        area2D_ = area;
     }
     catch (...)
     {
@@ -33,12 +29,14 @@ void Operator::resize2D(int sizeX, int sizeY)
     }
 }
 
-// (5) Устанавливается размер вспомогательного 3D поля
-void Operator::resize3D(int sizeX, int sizeY, int sizeZ)
+// (5) Инициализация вспомогательных 3D полей
+void Operator::initialize3D(const WorkZone3D& area)
 {
     try
     {
-        tempSF3D_.resize(sizeX, sizeY, sizeZ);
+        tempSF3D_.resize(area.getSizeX(), area.getSizeY(), area.getSizeZ());
+        area3D_.resize(area.getSizeX(), area.getSizeY(), area.getSizeZ());
+        area3D_ = area;
     }
     catch (...)
     {
@@ -87,7 +85,10 @@ void Operator::derX(const ScalarField2D& inField, ScalarField2D& outField)
     {
         for (int j = 0; j < outField.getSizeY(); ++j)
         {
-            outField(i, j) = derX(inField, i, j);
+            if (area2D_(i, j))
+            {
+                outField(i, j) = derX(inField, i, j);
+            }
         }
     }
 }
@@ -99,7 +100,10 @@ void Operator::derY(const ScalarField2D& inField, ScalarField2D& outField)
     {
         for (int j = 0; j < outField.getSizeY(); ++j)
         {
-            outField(i, j) = derY(inField, i, j);
+            if (area2D_(i, j))
+            {
+                outField(i, j) = derY(inField, i, j);
+            }
         }
     }
 }
@@ -113,7 +117,10 @@ void Operator::derX(const ScalarField3D& inField, ScalarField3D& outField)
         {
             for (int k = 0; k < outField.getSizeZ(); ++k)
             {
-                outField(i, j, k) = derX(inField, i, j, k);
+                if (area3D_(i, j, k))
+                {
+                    outField(i, j, k) = derX(inField, i, j, k);
+                }
             }
         }
     }
@@ -128,7 +135,10 @@ void Operator::derY(const ScalarField3D& inField, ScalarField3D& outField)
         {
             for (int k = 0; k < outField.getSizeZ(); ++k)
             {
-                outField(i, j, k) = derY(inField, i, j, k);
+                if (area3D_(i, j, k))
+                {
+                    outField(i, j, k) = derY(inField, i, j, k);
+                }
             }
         }
     }
@@ -143,7 +153,10 @@ void Operator::derZ(const ScalarField3D& inField, ScalarField3D& outField)
         {
             for (int k = 0; k < outField.getSizeZ(); ++k)
             {
-                outField(i, j, k) = derZ(inField, i, j, k);
+                if (area3D_(i, j, k))
+                {
+                    outField(i, j, k) = derZ(inField, i, j, k);
+                }
             }
         }
     }
@@ -154,98 +167,40 @@ void Operator::clear()
 {
     tempSF2D_.clear();
     tempSF3D_.clear();
+    area2D_.clear();
+    area3D_.clear();
 }
 
 ////////// private ///////////////////////////////////////////////////////////
 
-// (1) 2D Частная производная функции по "x" в точке
+// (1) 2D Частная производная функции по "x" в точке (x, y)
 Real Operator::derX(const ScalarField2D& inField, int x, int y)
 {
-    if (x == 0)
-    {
-        return (inField(x + 1, y) - inField(x, y)) / DX;
-    }
-    else
-    if (x == inField.getSizeX())
-    {
-        return (inField(x, y) - inField(x - 1, y)) / DX;
-    }
-    else
-    {
-        return (inField(x + 1, y) - inField(x - 1, y)) / (2 * DX);
-    }
+    return (inField(x + 1, y) - inField(x - 1, y)) / (2 * DX);
 }
 
-// (2) 2D Частная производная функции по "y"  в точке
+// (2) 2D Частная производная функции по "y"  в точке (x, y)
 Real Operator::derY(const ScalarField2D& inField, int x, int y)
 {
-    if (y == 0)
-    {
-        return (inField(x, y + 1) - inField(x, y)) / DY;
-    }
-    else
-    if (y == inField.getSizeY())
-    {
-        return (inField(x, y) - inField(x, y - 1)) / DY;
-    }
-    else
-    {
-        return (inField(x, y + 1) - inField(x, y - 1)) / (2 * DY);
-    }
+    return (inField(x, y + 1) - inField(x, y - 1)) / (2 * DY);
 }
 
-// (3) 3D Частная производная функции по "x" в точке
+// (3) 3D Частная производная функции по "x" в точке (x, y, z)
 Real Operator::derX(const ScalarField3D& inField, int x, int y, int z)
 {
-    if (x == 0)
-    {
-        return (inField(x + 1, y, z) - inField(x, y, z)) / DX;
-    }
-    else
-    if (x == inField.getSizeX())
-    {
-        return (inField(x, y, z) - inField(x - 1, y, z)) / DX;
-    }
-    else
-    {
-        return (inField(x + 1, y, z) - inField(x - 1, y, z)) / (2 * DX);
-    }
+    return (inField(x + 1, y, z) - inField(x - 1, y, z)) / (2 * DX);
 }
 
-// (4) 3D Частная производная функции по "y"  в точке
+// (4) 3D Частная производная функции по "y"  в точке (x, y, z)
 Real Operator::derY(const ScalarField3D& inField, int x, int y, int z)
 {
-    if (y == 0)
-    {
-        return (inField(x, y + 1, z) - inField(x, y, z)) / DY;
-    }
-    else
-    if (y == inField.getSizeY())
-    {
-        return (inField(x, y, z) - inField(x, y - 1, z)) / DY;
-    }
-    else
-    {
-        return (inField(x, y + 1, z) - inField(x, y - 1, z)) / (2 * DY);
-    }
+    return (inField(x, y + 1, z) - inField(x, y - 1, z)) / (2 * DY);
 }
 
-// (5) 3D Частная производная функции по "z"  в точке
+// (5) 3D Частная производная функции по "z"  в точке (x, y, z)
 Real Operator::derZ(const ScalarField3D& inField, int x, int y, int z)
 {
-    if (z == 0)
-    {
-        return (inField(x, y, z + 1) - inField(x, y, z)) / DZ;
-    }
-    else
-    if (z == inField.getSizeZ())
-    {
-        return (inField(x, y, z) - inField(x, y, z - 1)) / DZ;
-    }
-    else
-    {
-        return (inField(x, y, z + 1) - inField(x, y, z - 1)) / (2 * DZ);
-    }
+    return (inField(x, y, z + 1) - inField(x, y, z - 1)) / (2 * DZ);
 }
 
 ////////// class Poisson /////////////////////////////////////////////////////
@@ -290,7 +245,7 @@ void Poisson::resize3D(int sizeX, int sizeY, int sizeZ)
 
 // (6) 2D Решает уравнение Пуассона
 void Poisson::solve(ScalarField2D& field, const ScalarField2D& free, 
-           Real alpha, Real betta)
+                    Real alpha, Real betta)
 {
     for (int i = 0; i < JACOBI_STEP_NUMBER; ++i)
     {
@@ -300,7 +255,7 @@ void Poisson::solve(ScalarField2D& field, const ScalarField2D& free,
 
 // (7) 2D Решает уравнение Пуассона
 void Poisson::solve(VectorField2D& field, const VectorField2D& free,
-           Real alpha, Real betta)
+                    Real alpha, Real betta)
 {
     solve(field.x(), free.x(), alpha, betta);
     solve(field.y(), free.y(), alpha, betta);
@@ -308,7 +263,7 @@ void Poisson::solve(VectorField2D& field, const VectorField2D& free,
 
 // (8) 3D Решает уравнение Пуассона
 void Poisson::solve(ScalarField3D& field, const ScalarField3D& free, 
-           Real alpha, Real betta)
+                    Real alpha, Real betta)
 {
     for (int i = 0; i < JACOBI_STEP_NUMBER; ++i)
     {
@@ -318,7 +273,7 @@ void Poisson::solve(ScalarField3D& field, const ScalarField3D& free,
 
 // (9) 3D Решает уравнение Пуассона
 void Poisson::solve(VectorField3D& field, const VectorField3D& free,
-           Real alpha, Real betta)
+                    Real alpha, Real betta)
 {
     solve(field.x(), free.x(), alpha, betta);
     solve(field.y(), free.y(), alpha, betta);
@@ -342,41 +297,11 @@ Real Poisson::step(const ScalarField2D& field, const ScalarField2D& free,
     Real cI = 0;
     Real cJ = 0;
     
-    // Подбираем значения по "X", если его нет, доопределяем
-    if (!field.isInRange(i + 1, j))
-    {
-        cI += 2 * field(i, j) - field(i - 1, j);
-    }
-    else
-    {
-        cI += field(i + 1, j);
-    }
-    if (!field.isInRange(i - 1, j))
-    {
-        cI += 2 * field(i, j) - field(i + 1, j);
-    }
-    else
-    {
-        cI += field(i - 1, j);
-    }
+    // Подбираем значения по "X"
+    cI = field(i + 1, j) + field(i - 1, j);
     
-    // Подбираем значения по "Y", если его нет, доопределяем
-    if (!field.isInRange(i, j + 1))
-    {
-        cJ += 2 * field(i, j) - field(i, j - 1);
-    }
-    else
-    {
-        cJ += field(i, j + 1);
-    }
-    if (!field.isInRange(i, j - 1))
-    {
-        cJ += 2 * field(i, j) - field(i, j + 1);
-    }
-    else
-    {
-        cJ += field(i, j - 1);
-    }
+    // Подбираем значения по "Y"
+    cJ = field(i, j + 1) + field(i, j - 1);
     
     // Вычисляем очередное приближение в точке (i, j)
     return (cI + cJ + alpha * free(i, j)) / betta;
@@ -386,9 +311,10 @@ Real Poisson::step(const ScalarField2D& field, const ScalarField2D& free,
 void Poisson::step(ScalarField2D& field, const ScalarField2D& free, 
                    Real alpha, Real betta)
 {
-    for (int i = 0; i < field.getSizeX(); ++i)
+    tempSF2D_ = field;
+    for (int i = 1; i < field.getSizeX() - 1; ++i)
     {
-        for (int j = 0; j < field.getSizeY(); ++j)
+        for (int j = 1; j < field.getSizeY() - 1; ++j)
         {
             tempSF2D_(i, j) = step(field, free, alpha, betta, i, j);
         }
@@ -405,59 +331,14 @@ Real Poisson::step(const ScalarField3D& field, const ScalarField3D& free,
     Real cJ = 0;
     Real cK = 0;
     
-    // Подбираем значения по "X", если его нет, доопределяем
-    if (!field.isInRange(i + 1, j, k))
-    {
-        cI += 2 * field(i, j, k) - field(i - 1, j, k);
-    }
-    else
-    {
-        cI += field(i + 1, j, k);
-    }
-    if (!field.isInRange(i - 1, j, k))
-    {
-        cI += 2 * field(i, j, k) - field(i + 1, j, k);
-    }
-    else
-    {
-        cI += field(i - 1, j, k);
-    }
+    // Подбираем значения по "X"
+    cI = field(i + 1, j, k) + field(i - 1, j, k);
     
-    // Подбираем значения по "Y", если его нет, доопределяем
-    if (!field.isInRange(i, j + 1, k))
-    {
-        cJ += 2 * field(i, j, k) - field(i, j - 1, k);
-    }
-    else
-    {
-        cJ += field(i, j + 1, k);
-    }
-    if (!field.isInRange(i, j - 1, k))
-    {
-        cJ += 2 * field(i, j, k) - field(i, j + 1, k);
-    }
-    else
-    {
-        cJ += field(i, j - 1, k);
-    }
+    // Подбираем значения по "Y"
+    cJ = field(i, j + 1, k) + field(i, j - 1, k);
     
-    // Подбираем значения по "Z", если его нет, доопределяем
-    if (!field.isInRange(i, j, k + 1))
-    {
-        cK += 2 * field(i, j, k) - field(i, j, k - 1);
-    }
-    else
-    {
-        cK += field(i, j, k + 1);
-    }
-    if (!field.isInRange(i, j, k - 1))
-    {
-        cK += 2 * field(i, j, k) - field(i, j, k + 1);
-    }
-    else
-    {
-        cK += field(i, j, k - 1);
-    }
+    // Подбираем значения по "Z"
+    cK = field(i, j, k + 1) + field(i, j, k - 1);
     
     // Вычисляем очередное приближение в точке (i, j, k)
     return (cI + cJ + cK + alpha * free(i, j, k)) / betta;
@@ -467,11 +348,12 @@ Real Poisson::step(const ScalarField3D& field, const ScalarField3D& free,
 void Poisson::step(ScalarField3D& field, const ScalarField3D& free, 
                    Real alpha, Real betta)
 {
-    for (int i = 0; i < field.getSizeX(); ++i)
+    tempSF3D_ = field;
+    for (int i = 1; i < field.getSizeX() - 1; ++i)
     {
-        for (int j = 0; j < field.getSizeY(); ++j)
+        for (int j = 1; j < field.getSizeY() - 1; ++j)
         {
-            for (int k = 0; k < field.getSizeZ(); ++k)
+            for (int k = 1; k < field.getSizeZ() - 1; ++k)
             {
                 tempSF3D_(i, j, k) = step(field, free, alpha, betta, i, j, k);
             }

@@ -12,13 +12,12 @@
 
 namespace err
 {
-    ////////// class FluidException //////////////////////////////////////////
+    ////////// class Exception ///////////////////////////////////////////////
     // Дочерний класс, унаследованный от "std::exception". Содежит в себе   //
-    // код ошибки "errCode_" >= 0 (0 - отсутствие ошибок).                  //
-    // Описание ошибок см. файл....                                         //
+    // код ошибки "errCode_" (0 - отсутствие ошибок).                       //
     //////////////////////////////////////////////////////////////////////////
     
-    class FluidException : public std::exception
+    class Exception : public std::exception
     {
         private :
             
@@ -27,22 +26,89 @@ namespace err
         public :
             
             // (1) Конструктор (обнуляет поле)
-            FluidException();
+            Exception();
             
             // (2) Конструктор (инициализирует поле)
-            FluidException(const int& code);
-            
+            Exception(int newErrCode);
+	    
             // (3) Конструктор копирования
-            FluidException(const FluidException& exeption);
-            
+            Exception(const Exception& exeption) = default;
+	    
             // (4) Перегрузка оператора присваивания
-            FluidException& operator=(const FluidException& exeption);
+            Exception& operator=(const Exception& exeption) = default;
+            
+            // (5) Виртуальный метод возврата сообщения об ошибке
+            virtual const char* what() const noexcept = 0;
             
             // (5) Возвращает код ошибки
             int error() const;
             
-            // (6) Установить значение ошибки
-            void setErrCode(const int& code);
+            // (6) Деструктор
+            virtual ~Exception() = default;
+    };
+    
+    ////////// class FluidException //////////////////////////////////////////
+    // Дочерний класс, унаследованный от "err::Exception". Отвечает за      //
+    // ошибки в пространстве имен "fluid".                                  //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class FluidException : public Exception
+    {
+        private:
+            
+            //...
+            
+        public :
+            
+            // (1) Конструктор (обнуляет поле)
+            FluidException() = default;
+            
+            // (2) Конструктор (инициализирует поле)
+            FluidException(int newErrCode) : Exception(newErrCode) {};
+            
+            // (3) Конструктор копирования
+            FluidException(const FluidException& exeption) = default;
+            
+            // (4) Перегрузка оператора присваивания
+            FluidException& operator=(const FluidException& exeption) = default;
+            
+            // (5) Виртуальный метод возврата сообщения об ошибке
+            virtual const char* what() const noexcept;
+            
+            // (6) Деструктор
+            virtual ~FluidException() = default;
+    };
+    
+    ////////// class FioException ////////////////////////////////////////////
+    // Дочерний класс, унаследованный от "err::Exception". Отвечает за      //
+    // ошибки в пространстве имен "fio".                                    //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class FioException : public Exception
+    {
+        private:
+            
+            //...
+            
+        public :
+            
+            // (1) Конструктор (обнуляет поле)
+            FioException() = default;
+            
+            // (2) Конструктор (инициализирует поле)
+            FioException(int newErrCode) : Exception(newErrCode) {};
+            
+            // (3) Конструктор копирования
+            FioException(const FioException& exeption) = default;
+            
+            // (4) Перегрузка оператора присваивания
+            FioException& operator=(const FioException& exeption) = default;
+            
+            // (5) Виртуальный метод возврата сообщения об ошибке
+            virtual const char* what() const noexcept;
+            
+            // (6) Деструктор
+            virtual ~FioException() = default;
     };
 }
 

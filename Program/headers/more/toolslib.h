@@ -24,6 +24,8 @@ namespace fluid
             
             ScalarField2D tempSF2D_;    // Временное скалярное поле 2D
             ScalarField3D tempSF3D_;    // Временное скалярное поле 3D
+            WorkZone2D    area2D_;      // Область произведения рассчетов 2D
+            WorkZone3D    area3D_;      // Область произведения рассчетов 3D
             
         public :
             
@@ -31,18 +33,18 @@ namespace fluid
             Operator() = default;
             
             // (2) Конструктор копирования
-            Operator(const Operator& newOperator);
+            Operator(const Operator& newOperator) = delete;
             
             // (3) Перегрузка оператора присваивания
-            Operator& operator=(const Operator& newOperator) = default;
+            Operator& operator=(const Operator& newOperator) = delete;
             
-            ////////// Инициализация размеров полей //////////////////////////
+            ////////// Инициализация вспомогательных полей ///////////////////
             
-            // (4) Устанавливается размер вспомогательного 2D поля
-            void resize2D(int sizeX, int sizeY);
+            // (4) Инициализация вспомогательных 2D полей
+            void initialize2D(const WorkZone2D& area);
             
-            // (5) Устанавливается размер вспомогательного 3D поля
-            void resize3D(int sizeX, int sizeY, int sizeZ);
+            // (5) Инициализация вспомогательных 3D полей
+            void initialize3D(const WorkZone3D& area);
             
             ////////// Градиент и дивергенция ////////////////////////////////
             
@@ -74,6 +76,32 @@ namespace fluid
             
             // (14) 3D Частная производная функции по "z" всюду (3D)
             void derZ(const ScalarField3D& inField, ScalarField3D& outField);
+            
+            ////////// Добавление и вычитание полей //////////////////////////
+            
+            // ()
+            void add(ScalarField2D& field1, const ScalarField2D& field2);
+            
+            // ()
+            void add(ScalarField3D& field1, const ScalarField3D& field2);
+            
+            // ()
+            void add(VectorField2D& field1, const VectorField2D& field2);
+            
+            // ()
+            void add(VectorField3D& field1, const VectorField3D& field2);
+            
+            // ()
+            void sub(ScalarField2D& field1, const ScalarField2D& field2);
+            
+            // ()
+            void sub(ScalarField3D& field1, const ScalarField3D& field2);
+            
+            // ()
+            void sub(VectorField2D& field1, const VectorField2D& field2);
+            
+            // ()
+            void sub(VectorField3D& field1, const VectorField3D& field2);
             
             // (15) Освобождает выделенную память
             void clear();
