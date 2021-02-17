@@ -128,7 +128,7 @@ namespace fluid
             Real             borrowY_;      // Ордината точки заимствования
             SField2D*        pressure2D_;   // Поле давлений
             VField2D*        speed2D_;      // Поле скоростей
-            WallBorder2D*    wall2D_;       // Информация о границе
+            WallBorder2D*    wall2D_;       // Информация о гр. условии
             Interpolation2D* interp2D_;     // Иструменты интерполирования
             
         public :
@@ -209,7 +209,7 @@ namespace fluid
             
             SField2D*       pressure2D_;    // Поле давлений
             VField2D*       speed2D_;       // Поле скоростей
-            CavityBorder2D* cavity2D_;      // Информация о границе
+            CavityBorder2D* cavity2D_;      // Информация о гр. условии
             
         public :
             
@@ -281,7 +281,7 @@ namespace fluid
             
             Real             density_;      // Плотность жидкости, газа
             VField2D*        force2D_;      // Поле внешних сил
-            GravityBorder2D* gravity2D_;    // Информация о границе
+            GravityBorder2D* gravity2D_;    // Информация о гр-ом условии
             
         public :
             
@@ -312,6 +312,78 @@ namespace fluid
             
             // (7) Деструктор
             ~GravityBorderModeler2D() = default;
+    };
+    
+    ////////// struct SpeedBorder2D //////////////////////////////////////////
+    // Структура содержит информацию для описания граничного условия        //
+    // "скользящая стенка". Хранит информацию о скоростях точек стенки      //
+    // (скорости должны быть направлены по касательной к стенке).           //
+    // Применяется в паре с граничным условием "твердая стенка"             //
+    // (WallBorder2D) и обрабатывается после него.                          //
+    //////////////////////////////////////////////////////////////////////////
+    
+    struct SpeedBorder2D
+    {
+        public :
+            
+            VField2D wallSpeed2D;   // Поле скоростей точек стенки
+            
+        public :
+            
+            // (1) Конструктор
+            SpeedBorder2D() = default;
+            
+            // (2) Конструктор копирования
+            SpeedBorder2D(const SpeedBorder2D& border) = default;
+            
+            // (3) Перегрузка оператора присваивания
+            SpeedBorder2D& operator=(const SpeedBorder2D& border) = default;
+            
+            // (4) Деструктор
+            ~SpeedBorder2D() = default;
+    };
+    
+    ////////// class SpeedBorderModeler2D ////////////////////////////////////
+    // Моделирует граничные условия, данные о которых находятся в структуре //
+    // "SpeedBorder2D".                                                     //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class SpeedBorderModeler2D
+    {
+        private :
+            
+            VField2D*      speed2D_;        // Поле скоростей жидкости
+            SpeedBorder2D* wallSpeed2D_;    // Информация о гр. условии
+            
+        public :
+            
+            ////////// Инициализация /////////////////////////////////////////
+            
+            // (1) Конструктор
+            SpeedBorderModeler2D();
+            
+            // (2) Конструктор копирования
+            SpeedBorderModeler2D(const SpeedBorderModeler2D& 
+                                 modeler) = delete;
+            
+            // (3) Перегрузка оператора присваивания
+            SpeedBorderModeler2D& operator=(const SpeedBorderModeler2D& 
+                                            modeler) = delete;
+            
+            // (4) Инициализация всех полей
+            void initialize(BasicFields2D& fields2D, 
+                            SpeedBorder2D& border2D);
+            
+            ////////// Переход в новое состояние /////////////////////////////
+            
+            // (5) Производит переход в новое состояние, базируясь на текущем
+            void compute();
+            
+            // (6) Установка значений по умолчанию
+            void clear();
+            
+            // (7) Деструктор
+            ~SpeedBorderModeler2D() = default;
     };
 }
 

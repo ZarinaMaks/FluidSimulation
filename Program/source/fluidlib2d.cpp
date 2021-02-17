@@ -281,3 +281,50 @@ void GravityBorderModeler2D::clear()
     force2D_   = nullptr;
     gravity2D_ = nullptr;
 }
+
+////////// class SpeedBorderModeler2D //////////////////////////////////////
+// Описание : fluidlib2d.h.                                                 //
+//////////////////////////////////////////////////////////////////////////////
+
+// (1) Конструктор
+SpeedBorderModeler2D::SpeedBorderModeler2D()
+{
+    speed2D_     = nullptr;
+    wallSpeed2D_ = nullptr;
+}
+
+// (4) Инициализация всех полей
+void SpeedBorderModeler2D::initialize(BasicFields2D& fields2D, 
+                                      SpeedBorder2D& border2D)
+{
+    speed2D_     = &fields2D.speed2D;
+    wallSpeed2D_ = &border2D;
+}
+
+// (5) Производит переход в новое состояние, базируясь на текущем
+void SpeedBorderModeler2D::compute()
+{
+    // Ссылаемся на поле скоростей стенки
+    VField2D& wS2D = wallSpeed2D_->wallSpeed2D;
+    
+    // Проходим по всем точкам рабочей зоны
+    for (int i = 0; i < wS2D.getSizeX(); ++i)
+    {
+        for (int j = 0; j < wS2D.getSizeY(); ++j)
+        {
+            if (wS2D.x().area(i, j))
+            {
+                // Обновляем значение скорости жидкости в точке (i, j)
+                speed2D_->x().field(i, j) += wS2D.x().field(i, j);
+                speed2D_->y().field(i, j) += wS2D.y().field(i, j);
+            }
+        }
+    }
+}
+
+// (6) Установка значений по умолчанию
+void SpeedBorderModeler2D::clear()
+{
+    speed2D_     = nullptr;
+    wallSpeed2D_ = nullptr;
+}
