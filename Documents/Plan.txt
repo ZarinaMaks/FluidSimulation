@@ -1,0 +1,45 @@
+// Общий скелет решения задачи течения Пуазеля
+class ProgramPuisaile
+{
+    private :
+        
+        Fluid2D        fluid2D_;    // Структура инф-ии о жидкости : BasicFields2D, [Семен]
+                                    // WallBorder2D, CavityBorder2D, GravityBorder2D, SpeedBorder2D...
+        
+        BasicTools2D   tools2D_;    // Базовые инструменты моделирования (*) [Семен]
+        FluidModeler2D modeler2D_;  // Моделировщик для Fluid2D, основной метод : compute(); [Семен]
+                                    // initialize(BasicTools2D& ..., Fluid2D& ...);
+        
+        Statistic      statistic_;  // Собирает статистику по модели (и пишет в файл например)
+        Interface      interface_;  // Класс, который отвечает за связь с пользователем и 
+                                    // управлением данными жидкости и не только [Кто-нибудь]
+        GraphUnit      grUnit_;     // Класс, который отвечает за рисование [Зарина]
+        
+    public :
+        
+        // Конструктор, =, .....
+        
+        // Первичная инициализация
+        void initialize(....)
+        {
+            modeler2D_.initialize(....);
+            interface_.initialize(....);
+            grUnit_.initialize(...);
+        }
+        
+        // Основное действие
+        void run()
+        {
+            while (!haveExit)
+            {
+                interface_.check(haveExit);
+                modeler2D_.compute();
+                grUnit_.draw();
+            }
+        }
+        
+        // Завершение работы/или деструктор
+        void finish();
+        
+        // Деструктор
+}
