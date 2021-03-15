@@ -13,12 +13,12 @@
 
 namespace fluid
 {
-    ////////// struct BasicFields2D //////////////////////////////////////////
+    ////////// struct BasicFluid2D ///////////////////////////////////////////
     // Структура содержит базовые величины и поля, которые требуются для    //
     // моделирования.                                                       //
     //////////////////////////////////////////////////////////////////////////
     
-    struct BasicFields2D
+    struct BasicFluid2D
     {
         public :
             
@@ -31,52 +31,47 @@ namespace fluid
         public :
             
             // (1) Конструктор
-            BasicFields2D();
+            BasicFluid2D();
             
             // (2) Конструктор копирования
-            BasicFields2D(const BasicFields2D& fields) = default;
+            BasicFluid2D(const BasicFluid2D& fluid) = default;
             
             // (3) Перегрузка оператора присваивания
-            BasicFields2D& operator=(const BasicFields2D& fields) = default;
+            BasicFluid2D& operator=(const BasicFluid2D& fluid) = default;
             
             // (4) Деструктор
-            ~BasicFields2D() = default;
+            ~BasicFluid2D() = default;
     };
     
-    ////////// class BasicFieldsModeler2D ////////////////////////////////////
+    ////////// class BasicFluidModeler2D /////////////////////////////////////
     // Моделирует течение несжимаемой жидкости, используя инструменты       //
     // моделирования "BasicTools2D" и данные из структуры "BasicFields2D".  //
     //////////////////////////////////////////////////////////////////////////
     
-    class BasicFieldsModeler2D
+    class BasicFluidModeler2D
     {
         private :
             
             SField2D       tempSF2D_;   // Временное скалярное поле 2D
             VField2D       tempVF2D_;   // Временное векторное поле 2D
             BasicTools2D*  tools2D_;    // Инструменты моделирования
-            BasicFields2D* fields2D_;   // Данные моделируемой жидкости
+            BasicFluid2D*  fluid2D_;    // Данные моделируемой жидкости
             
         public :
             
-            ////////// Инициализация /////////////////////////////////////////
-            
             // (1) Конструктор
-            BasicFieldsModeler2D();
+            BasicFluidModeler2D();
             
             // (2) Конструктор копирования
-            BasicFieldsModeler2D(const BasicFieldsModeler2D& 
-                                 modeler) = delete;
+            BasicFluidModeler2D(const BasicFluidModeler2D& modeler) = delete;
             
             // (3) Перегрузка оператора присваивания
-            BasicFieldsModeler2D& operator=(const BasicFieldsModeler2D& 
-                                            fields) = delete;
+            BasicFluidModeler2D& operator=(const BasicFluidModeler2D& 
+                                           fluid) = delete;
             
             // (4) Инициализация всех полей
             void initialize(int sizeX, int sizeY, BasicTools2D& tools2D, 
-                            BasicFields2D& fields2D);
-            
-            ////////// Переход в новое состояние /////////////////////////////
+                            BasicFluid2D& fluid2D);
             
             // (5) Производит переход в новое состояние, базируясь на текущем
             void compute();
@@ -85,7 +80,7 @@ namespace fluid
             void clear();
             
             // (7) Деструктор
-            ~BasicFieldsModeler2D() = default;
+            ~BasicFluidModeler2D() = default;
     };
     
     ////////// struct WallBorder2D ///////////////////////////////////////////
@@ -133,8 +128,6 @@ namespace fluid
             
         public :
             
-            ////////// Инициализация /////////////////////////////////////////
-            
             // (1) Конструктор
             WallBorderModeler2D();
             
@@ -146,10 +139,8 @@ namespace fluid
                                            modeler) = delete;
             
             // (4) Инициализация всех полей
-            void initialize(BasicTools2D& tools2D, BasicFields2D& fields2D, 
+            void initialize(BasicTools2D& tools2D, BasicFluid2D& fluid2D, 
                             WallBorder2D& border2D);
-            
-            ////////// Переход в новое состояние /////////////////////////////
             
             // (5) Производит переход в новое состояние, базируясь на текущем
             void compute();
@@ -213,8 +204,6 @@ namespace fluid
             
         public :
             
-            ////////// Инициализация /////////////////////////////////////////
-            
             // (1) Конструктор
             CavityBorderModeler2D();
             
@@ -227,10 +216,7 @@ namespace fluid
                                              modeler) = delete;
             
             // (4) Инициализация всех полей
-            void initialize(BasicFields2D& fields2D, 
-                            CavityBorder2D& border2D);
-            
-            ////////// Переход в новое состояние /////////////////////////////
+            void initialize(BasicFluid2D& fluid2D, CavityBorder2D& border2D);
             
             // (5) Производит переход в новое состояние, базируясь на текущем
             void compute();
@@ -284,8 +270,6 @@ namespace fluid
             
         public :
             
-            ////////// Инициализация /////////////////////////////////////////
-            
             // (1) Конструктор
             GravityBorderModeler2D();
             
@@ -298,10 +282,7 @@ namespace fluid
                                               modeler) = delete;
             
             // (4) Инициализация всех полей
-            void initialize(BasicFields2D& fields2D, 
-                            GravityBorder2D& border2D);
-            
-            ////////// Переход в новое состояние /////////////////////////////
+            void initialize(BasicFluid2D& fluid2D, GravityBorder2D& border2D);
             
             // (5) Производит переход в новое состояние, базируясь на текущем
             void compute();
@@ -315,10 +296,11 @@ namespace fluid
     
     ////////// struct SpeedBorder2D //////////////////////////////////////////
     // Структура содержит информацию для описания граничного условия        //
-    // "скользящая стенка". Хранит информацию о скоростях точек стенки      //
-    // (скорости должны быть направлены по касательной к стенке).           //
-    // Применяется в паре с граничным условием "твердая стенка"             //
-    // (WallBorder2D) и обрабатывается после него.                          //
+    // "скользящая стенка".                                                 //
+    // Хранит информацию о скоростях точек стенки (скорости должны быть     //
+    // направлены по касательной к стенке). Применяется в паре с граничным  //
+    // условием "твердая стенка" (WallBorder2D) и обрабатывается после      //
+    // него.                                                                //
     //////////////////////////////////////////////////////////////////////////
     
     struct SpeedBorder2D
@@ -352,11 +334,9 @@ namespace fluid
         private :
             
             VField2D*      speed2D_;        // Поле скоростей жидкости
-            SpeedBorder2D* wallSpeed2D_;    // Информация о гр. условии
+            SpeedBorder2D* wallSpeed2D_;    // Информация о гр-ом условии
             
         public :
-            
-            ////////// Инициализация /////////////////////////////////////////
             
             // (1) Конструктор
             SpeedBorderModeler2D();
@@ -370,10 +350,7 @@ namespace fluid
                                             modeler) = delete;
             
             // (4) Инициализация всех полей
-            void initialize(BasicFields2D& fields2D, 
-                            SpeedBorder2D& border2D);
-            
-            ////////// Переход в новое состояние /////////////////////////////
+            void initialize(BasicFluid2D& fluid2D, SpeedBorder2D& border2D);
             
             // (5) Производит переход в новое состояние, базируясь на текущем
             void compute();
@@ -383,6 +360,214 @@ namespace fluid
             
             // (7) Деструктор
             ~SpeedBorderModeler2D() = default;
+    };
+    
+    ////////// struct Fluid2D ////////////////////////////////////////////////
+    // Хранит всю информацию о парамерах жидкости:                          //
+    //                                                                      //
+    // 1) BasicFields2D                                                     //
+    //////////////////////////////////////////////////////////////////////////
+    
+    struct Fluid2D
+    {
+        public :
+            
+            BasicFluid2D basic2D;   // Базовые величины моделирования
+            
+        public :
+            
+            // (1) Конструктор
+            Fluid2D() = default;
+            
+            // (2) Конструктор копирования
+            Fluid2D(const Fluid2D& fluid) = default;
+            
+            // (3) Перегрузка оператора присваивания
+            Fluid2D& operator=(const Fluid2D& fluid) = default;
+            
+            // (4) Деструктор
+            ~Fluid2D() = default;
+    };
+    
+    ////////// class FluidModeler2D //////////////////////////////////////////
+    // Моделирует течение жидкости. Вся информация, которая требуется для   //
+    // моделирования, находится в структуре "Fluid2D".                      //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class FluidModeler2D
+    {
+        private :
+            
+            BasicFluidModeler2D basic2D_;   // Рассчет течения жидкости
+            
+        public :
+            
+            // (1) Конструктор
+            FluidModeler2D() = default;
+            
+            // (2) Конструктор копирования
+            FluidModeler2D(const FluidModeler2D& modeler) = delete;
+            
+            // (3) Перегрузка оператора присваивания
+            FluidModeler2D& operator=(const FluidModeler2D& modeler) = delete;
+            
+            // (4) Инициализация всех полей
+            void initialize(int sizeX, int sizeY, BasicTools2D& tools2D,
+                            Fluid2D& fluid2D);
+            
+            // (5) Производит переход в новое состояние, базируясь на текущем
+            void compute();
+            
+            // (6) Установка значений по умолчанию
+            void clear();
+            
+            // (7) Деструктор
+            ~FluidModeler2D() = default;
+    };
+    
+    ////////// struct Border2D ///////////////////////////////////////////////
+    // Хранит всю информацию для моделирования граничных условий течения    //
+    // жидкости:                                                            //
+    //                                                                      //
+    // 1) WallBorder2D                                                      //
+    // 2) CavityBorder2D                                                    //
+    // 3) GravityBorder2D                                                   //
+    // 4) SpeedBorder2D                                                     //
+    //////////////////////////////////////////////////////////////////////////
+    
+    struct Border2D
+    {
+        public :
+            
+            WallBorder2D    wall2D;     // Твердая стенка
+            CavityBorder2D  cavity2D;   // Область повыш./пониж. давления
+            GravityBorder2D gravity2D;  // Поле силы тяжести
+            SpeedBorder2D   speed2D;    // Область постоянства скорости
+            
+        public :
+            
+            // (1) Конструктор
+            Border2D() = default;
+            
+            // (2) Конструктор копирования
+            Border2D(const Border2D& border) = default;
+            
+            // (3) Перегрузка оператора присваивания
+            Border2D& operator=(const Border2D& border) = default;
+            
+            // (4) Деструктор
+            ~Border2D() = default;
+    };
+    
+    ////////// class BorderModeler2D /////////////////////////////////////////
+    // Моделирует все граничные условия. Информация, которая требуется для  //
+    // моделирования, находится в структуре "Border2D".                     //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class BorderModeler2D
+    {
+        private :
+            
+            WallBorderModeler2D    wall2D_;     // Рассчет твердой стенки
+            CavityBorderModeler2D  cavity2D_;   // Рассчет обл-ей давления
+            GravityBorderModeler2D gravity2D_;  // Рассчет поля силы тяжести
+            SpeedBorderModeler2D   speed2D_;    // Рассчет обл-ей скорости
+            
+        public :
+            
+            // (1) Конструктор
+            BorderModeler2D() = default;
+            
+            // (2) Конструктор копирования
+            BorderModeler2D(const BorderModeler2D& modeler) = delete;
+            
+            // (3) Перегрузка оператора присваивания
+            BorderModeler2D& operator=(const BorderModeler2D& 
+                                       modeler) = delete;
+            
+            // (4) Инициализация всех полей
+            void initialize(BasicTools2D& tools2D, Fluid2D& fluid2D, 
+                            Border2D& border2D);
+            
+            // (5) Производит переход в новое состояние, базируясь на текущем
+            void compute();
+            
+            // (6) Установка значений по умолчанию
+            void clear();
+            
+            // (7) Деструктор
+            ~BorderModeler2D() = default;
+    };
+    
+    ////////// struct Model2D ////////////////////////////////////////////////
+    // Хранит всю информацию для моделирования течения жидкости или газа в  //
+    // определенной системе с граничными условиями. Включает:               //
+    //                                                                      //
+    // 1) Fluid2D  : параметры, связанные с жидкостью.                      //
+    // 2) Border2D : параметры граничных условий.                           //
+    //////////////////////////////////////////////////////////////////////////
+    
+    struct Model2D
+    {
+        public :
+            
+            Fluid2D  fluid2D;   // Все параметры течения
+            Border2D border2D;  // Все граничные условия
+            
+        public :
+            
+            // (1) Конструктор
+            Model2D() = default;
+            
+            // (2) Конструктор копирования
+            Model2D(const Model2D& model) = default;
+            
+            // (3) Перегрузка оператора присваивания
+            Model2D& operator=(const Model2D& model) = default;
+            
+            // (4) Деструктор
+            ~Model2D() = default;
+    };
+    
+    ////////// class Modeler2D ///////////////////////////////////////////////
+    // Моделирует течение жидкости в определенной системе, которая          //
+    // описывается структурой "Model2D". Включает:                          //
+    //                                                                      //
+    // 1) BasicTools2D    : Базовые инструменты моделирования.              //
+    // 2) FluidModeler2D  : Моделирует течение жидкости.                    //
+    // 3) BorderModeler2D : Моделирует граничные условия.                   //
+    //////////////////////////////////////////////////////////////////////////
+    
+    class Modeler2D
+    {
+        private :
+            
+            BasicTools2D    tools2D_;   // Набор базовых инструментов
+            FluidModeler2D  fluid2D_;   // Рассчитывает течение жидкости
+            BorderModeler2D border2D_;  // Рассчитывает граничные условия
+            
+        public :
+            
+            // (1) Конструктор
+            Modeler2D() = default;
+            
+            // (2) Конструктор копирования
+            Modeler2D(const Modeler2D& modeler) = delete;
+            
+            // (3) Перегрузка оператора присваивания
+            Modeler2D& operator=(const Modeler2D& modeler) = delete;
+            
+            // (4) Инициализация всех полей
+            void initialize(int sizeX, int sizeY, Model2D& model2D);
+            
+            // (5) Производит переход в новое состояние, базируясь на текущем
+            void compute();
+            
+            // (6) Установка значений по умолчанию
+            void clear();
+            
+            // (7) Деструктор
+            ~Modeler2D() = default;
     };
 }
 

@@ -7,31 +7,31 @@
 
 using namespace fluid;
 
-////////// struct BasicFields2D //////////////////////////////////////////////
+////////// struct BasicFluid2D ///////////////////////////////////////////////
 // Описание : fluidlib2d.h.                                                 //
 //////////////////////////////////////////////////////////////////////////////
 
 // (1) Конструктор
-BasicFields2D::BasicFields2D()
+BasicFluid2D::BasicFluid2D()
 {
     viscosity = 0;
     density   = 0;
 }
 
-////////// class BasicFieldsModeler2D ////////////////////////////////////////
+////////// class BasicFluidModeler2D ////////////////////////////////////////
 // Описание : fluidlib2d.h.                                                 //
 //////////////////////////////////////////////////////////////////////////////
 
 // (1) Конструктор
-BasicFieldsModeler2D::BasicFieldsModeler2D()
+BasicFluidModeler2D::BasicFluidModeler2D()
 {
-    tools2D_  = nullptr;
-    fields2D_ = nullptr;
+    tools2D_ = nullptr;
+    fluid2D_ = nullptr;
 }
 
 // (4) Инициализация всех полей
-void BasicFieldsModeler2D::initialize(int sizeX, int sizeY, BasicTools2D& 
-                                      tools2D, BasicFields2D& fields2D)
+void BasicFluidModeler2D::initialize(int sizeX, int sizeY, BasicTools2D& 
+                                      tools2D, BasicFluid2D& fluid2D)
 {
     try
     {
@@ -40,8 +40,8 @@ void BasicFieldsModeler2D::initialize(int sizeX, int sizeY, BasicTools2D&
         tempVF2D_.resize(sizeX, sizeY);
         
         // Подключаем вспомогательные инструменты
-        tools2D_  = &tools2D;
-        fields2D_ = &fields2D;
+        tools2D_ = &tools2D;
+        fluid2D_ = &fluid2D;
     }
     catch (...)
     {
@@ -51,33 +51,33 @@ void BasicFieldsModeler2D::initialize(int sizeX, int sizeY, BasicTools2D&
 }
 
 // (5) Производит переход в новое состояние, базируясь на текущем
-void BasicFieldsModeler2D::compute()
+void BasicFluidModeler2D::compute()
 {
     // Адвекция скорости
-    tools2D_->model().advection(fields2D_->speed2D, fields2D_->speed2D);
+    tools2D_->model().advection(fluid2D_->speed2D, fluid2D_->speed2D);
     
     // Диффузия скорости
-    tools2D_->model().diffusion(fields2D_->speed2D, fields2D_->viscosity);
+    tools2D_->model().diffusion(fluid2D_->speed2D, fluid2D_->viscosity);
     
     // Изменение скорости под действием внешних сил
-    tools2D_->model().force(fields2D_->speed2D, fields2D_->force2D);
+    tools2D_->model().force(fluid2D_->speed2D, fluid2D_->force2D);
     
     // Изменение поля давлений
-    tools2D_->operation().div(fields2D_->speed2D, tempSF2D_);
-    tools2D_->poisson().solve(fields2D_->pressure2D, tempSF2D_, -DX * DX, 4);
+    tools2D_->operation().div(fluid2D_->speed2D, tempSF2D_);
+    tools2D_->poisson().solve(fluid2D_->pressure2D, tempSF2D_, -DX * DX, 4);
     
     // Нахождение поля скоростей с нулевой дивергенцией
-    tools2D_->operation().grad(fields2D_->pressure2D, tempVF2D_);
-    tools2D_->operation().sub(fields2D_->speed2D, tempVF2D_);
+    tools2D_->operation().grad(fluid2D_->pressure2D, tempVF2D_);
+    tools2D_->operation().sub(fluid2D_->speed2D, tempVF2D_);
 }
 
 // (6) Установка значений по умолчанию
-void BasicFieldsModeler2D::clear()
+void BasicFluidModeler2D::clear()
 {
     tempSF2D_.clear();
     tempVF2D_.clear();
-    tools2D_  = nullptr;
-    fields2D_ = nullptr;
+    tools2D_ = nullptr;
+    fluid2D_ = nullptr;
 }
 
 ////////// class WallBorderModeler2D /////////////////////////////////////////
@@ -98,11 +98,11 @@ WallBorderModeler2D::WallBorderModeler2D()
 }
 
 // (4) Инициализация всех полей
-void WallBorderModeler2D::initialize(BasicTools2D& tools2D, BasicFields2D& 
-                                     fields2D, WallBorder2D& border2D)
+void WallBorderModeler2D::initialize(BasicTools2D& tools2D, BasicFluid2D& 
+                                     fluid2D, WallBorder2D& border2D)
 {
-    pressure2D_ = &fields2D.pressure2D;
-    speed2D_    = &fields2D.speed2D;
+    pressure2D_ = &fluid2D.pressure2D;
+    speed2D_    = &fluid2D.speed2D;
     wall2D_     = &border2D;
     interp2D_   = &tools2D.interp();
 }
@@ -182,11 +182,11 @@ CavityBorderModeler2D::CavityBorderModeler2D()
 }
 
 // (4) Инициализация всех полей
-void CavityBorderModeler2D::initialize(BasicFields2D& fields2D, 
+void CavityBorderModeler2D::initialize(BasicFluid2D& fluid2D, 
                                        CavityBorder2D& border2D)
 {
-    pressure2D_ = &fields2D.pressure2D;
-    speed2D_    = &fields2D.speed2D;
+    pressure2D_ = &fluid2D.pressure2D;
+    speed2D_    = &fluid2D.speed2D;
     cavity2D_   = &border2D;
 }
 
@@ -242,10 +242,10 @@ GravityBorderModeler2D::GravityBorderModeler2D()
 }
 
 // (4) Инициализация всех полей
-void GravityBorderModeler2D::initialize(BasicFields2D& fields2D, 
+void GravityBorderModeler2D::initialize(BasicFluid2D& fluid2D, 
                                         GravityBorder2D& border2D)
 {
-    force2D_   = &fields2D.force2D;
+    force2D_   = &fluid2D.force2D;
     gravity2D_ = &border2D;
 }
 
@@ -286,10 +286,10 @@ SpeedBorderModeler2D::SpeedBorderModeler2D()
 }
 
 // (4) Инициализация всех полей
-void SpeedBorderModeler2D::initialize(BasicFields2D& fields2D, 
+void SpeedBorderModeler2D::initialize(BasicFluid2D& fluid2D, 
                                       SpeedBorder2D& border2D)
 {
-    speed2D_     = &fields2D.speed2D;
+    speed2D_     = &fluid2D.speed2D;
     wallSpeed2D_ = &border2D;
 }
 
@@ -319,4 +319,87 @@ void SpeedBorderModeler2D::clear()
 {
     speed2D_     = nullptr;
     wallSpeed2D_ = nullptr;
+}
+
+////////// class FluidModeler2D //////////////////////////////////////////////
+// Описание : fluidlib2d.h.                                                 //
+//////////////////////////////////////////////////////////////////////////////
+
+// (4) Инициализация всех полей
+void FluidModeler2D::initialize(int sizeX, int sizeY, BasicTools2D& tools2D,
+                                Fluid2D& fluid2D)
+{
+    basic2D_.initialize(sizeX, sizeY, tools2D, fluid2D.basic2D);
+}
+
+// (5) Производит переход в новое состояние, базируясь на текущем
+void FluidModeler2D::compute()
+{
+    basic2D_.compute();
+}
+
+// (6) Установка значений по умолчанию
+void FluidModeler2D::clear()
+{
+    basic2D_.clear();
+}
+
+////////// class BorderModeler2D /////////////////////////////////////////////
+// Описание : fluidlib2d.h.                                                 //
+//////////////////////////////////////////////////////////////////////////////
+
+// (4) Инициализация всех полей
+void BorderModeler2D::initialize(BasicTools2D& tools2D, Fluid2D& fluid2D, 
+                                 Border2D& border2D)
+{
+    wall2D_.initialize(tools2D, fluid2D.basic2D, border2D.wall2D);
+    speed2D_.initialize(fluid2D.basic2D, border2D.speed2D);
+    cavity2D_.initialize(fluid2D.basic2D, border2D.cavity2D);
+    gravity2D_.initialize(fluid2D.basic2D, border2D.gravity2D);
+}
+
+// (5) Производит переход в новое состояние, базируясь на текущем
+void BorderModeler2D::compute()
+{
+    // Порядок имеет значение
+    wall2D_.compute();
+    cavity2D_.compute();
+    speed2D_.compute();
+    gravity2D_.compute();
+}
+
+// (6) Установка значений по умолчанию
+void BorderModeler2D::clear()
+{
+    wall2D_.clear();
+    cavity2D_.clear();
+    speed2D_.clear();
+    gravity2D_.clear();
+}
+
+////////// class Modeler2D ///////////////////////////////////////////////////
+// Описание : fluidlib2d.h.                                                 //
+//////////////////////////////////////////////////////////////////////////////
+
+// (4) Инициализация всех полей
+void Modeler2D::initialize(int sizeX, int sizeY, Model2D& model2D)
+{
+    tools2D_.initialize(sizeX, sizeY);
+    fluid2D_.initialize(sizeX, sizeY, tools2D_, model2D.fluid2D);
+    border2D_.initialize(tools2D_, model2D.fluid2D, model2D.border2D);
+}
+
+// (5) Производит переход в новое состояние, базируясь на текущем
+void Modeler2D::compute()
+{
+    border2D_.compute();
+    fluid2D_.compute();
+}
+
+// (6) Установка значений по умолчанию
+void Modeler2D::clear()
+{
+    tools2D_.clear();
+    fluid2D_.clear();
+    border2D_.clear();
 }
