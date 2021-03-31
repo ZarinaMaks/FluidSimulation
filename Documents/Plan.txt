@@ -3,28 +3,26 @@ class ProgramPuisaile
 {
     private :
         
-        Fluid2D        fluid2D_;    // Структура инф-ии о жидкости : BasicFields2D, [Семен]
-                                    // WallBorder2D, CavityBorder2D, GravityBorder2D, SpeedBorder2D...
+        Model2D   model2D_;    // Структура инф-ии о жидкости [fluidlib.h] (OK)
+        Modeler2D modeler2D_;  // Моделировщик [fluidlib.h] (OK)
         
-        BasicTools2D   tools2D_;    // Базовые инструменты моделирования (*) [Семен]
-        FluidModeler2D modeler2D_;  // Моделировщик для Fluid2D, основной метод : compute(); [Семен]
-                                    // initialize(BasicTools2D& ..., Fluid2D& ...);
+        Statistic statistic_;  // Собирает статистику по модели (и пишет в файл например) [Кто-нибудь]
+        Interface interface_;  // Класс, который отвечает за связь с пользователем и 
+                               // управлением данными жидкости и не только [Кто-нибудь]
         
-        Statistic      statistic_;  // Собирает статистику по модели (и пишет в файл например)
-        Interface      interface_;  // Класс, который отвечает за связь с пользователем и 
-                                    // управлением данными жидкости и не только [Кто-нибудь]
-        GraphUnit      grUnit_;     // Класс, который отвечает за рисование [Зарина]
+        GraphUnit grUnit_;     // Класс, который отвечает за рисование [Зарина]
         
     public :
         
         // Конструктор, =, .....
         
         // Первичная инициализация
-        void initialize(....)
+        void initialize(...)
         {
-            modeler2D_.initialize(....);
-            interface_.initialize(....);
+            interface_.initialize(...);
+            statistic_.initialize(...);
             grUnit_.initialize(...);
+            modeler2D_.initialize(sizeX, sizeY, model2D_);
         }
         
         // Основное действие
@@ -39,7 +37,11 @@ class ProgramPuisaile
         }
         
         // Завершение работы/или деструктор
-        void finish();
+        void finish()
+        {
+            statistic_.output(...);
+            grUnit_.close(...);
+        }
         
         // Деструктор
-}
+};

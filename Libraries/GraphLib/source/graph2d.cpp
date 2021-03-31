@@ -28,7 +28,7 @@ void PollEvent::initialize(Window& window)
 // (5) Обрабатывает нажатия клавиш и состояние окна программы
 void PollEvent::checkEvents()
 {
-    // Упрощаем имя
+    // Упрощаем имя, выставляем базовые значения
     Status& status = window_->status;
     
     // Опустошаем очередь событий окна
@@ -77,6 +77,8 @@ void PollEvent::checkEvents()
                 break;
             
             default :
+                status.window.closed = false;
+                status.window.resized = false;
                 break;
         }
     }
@@ -134,4 +136,87 @@ void PollEvent::mouseButtonRefresh(bool isPressed)
         default :
             break;
     }
+    
+    // Обновляем координаты мыши
+    status.mouse.x = event_.mouseButton.x;
+    status.mouse.y = event_.mouseButton.y;
+}
+
+////////// class TestGraph ///////////////////////////////////////////////////
+// Описание : graph2d.h                                                     //
+//////////////////////////////////////////////////////////////////////////////
+
+////////// public ////////////////////////////////////////////////////////////
+
+// (1) Конструктор
+TestGraph::TestGraph()
+{
+    window_ = nullptr;
+}
+
+// (4) Первичная инициализация обработчика, установление связей
+void TestGraph::initialize(int sizeX, int sizeY, Window& window)
+{
+    window_ = &window;
+    image_.create(sizeX, sizeY, sf::Color(0, 0, 0));
+    texture_.loadFromImage(image_);
+    sprite_.setTexture(texture_);
+    window_->window.clear(sf::Color(0, 200, 0));
+    window_->window.draw(sprite_);
+    window_->window.display();
+}
+
+// (5) Обрабатывает нажатия клавиш и состояние окна программы
+void TestGraph::draw()
+{
+    if (checkMouse() || window_->status.window.resized)
+    {
+        texture_.update(image_);
+        window_->window.clear(sf::Color(0, 200, 0));
+        window_->window.draw(sprite_);
+        window_->window.display();
+    }
+}
+
+////////// private ///////////////////////////////////////////////////////////
+
+// (1) Изменяет цвет пикселя картинки в соотв. с сост. мыши
+bool TestGraph::checkMouse()
+{
+    // Упрощаем имя
+    Status& status = window_->status;
+    
+    // Размеры изображения
+    int sizeX = image_.getSize().x;
+    int sizeY = image_.getSize().y;
+    
+    // Закрашиваем нужным цветом пиксели при нажатии кнопок мышы
+    if (status.mouse.lButton)
+    {
+        int x = status.mouse.x;
+        int y = status.mouse.y;
+        
+        // Если внутри спрайта, то меняем цвет
+        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
+        {
+            image_.setPixel(x, y, sf::Color(255, 255, 255));
+            return true;
+        }
+        return false;
+    }
+    else
+    if (status.mouse.rButton)
+    {
+        int x = status.mouse.x;
+        int y = status.mouse.y;
+        
+        // Если внутри спрайта, то меняем цвет
+        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
+        {
+            image_.setPixel(x, y, sf::Color(0, 255, 255));
+            return true;
+        }
+        return false;
+    }
+    return false;
 }

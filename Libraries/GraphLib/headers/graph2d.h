@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include "components2d.h"
+//#include "SFML/Graphics/Image.hpp"
 
 namespace graph
 {
@@ -54,17 +55,22 @@ namespace graph
             void mouseButtonRefresh(bool isPressed);
     };
     
-    ////////// class Graph ///////////////////////////////////////////////////
-    // To do...                                                             //
+    ////////// class TestGraph ///////////////////////////////////////////////
+    // Test....                                                             //
     //////////////////////////////////////////////////////////////////////////
     
-    /*
-    class Graph
+    class TestGraph
     {
         private :
             
-            // Информация о моделируемой системе
-            //fluid::Model2D* model_;
+            // Поле пикселей - изображение моделируемой системы
+            sf::Image image_;
+            
+            // Текстура, соответствующая изображению
+            sf::Texture texture_;
+            
+            // Спрайт для отображения текстуры
+            sf::Sprite sprite_;
             
             // Окно программы
             Window* window_;
@@ -72,24 +78,28 @@ namespace graph
         public :
             
             // (1) Конструктор
-            Graph();
+            TestGraph();
             
             // (2) Конструктор копирования
-            Graph(const Graph& graph) = delete;
+            TestGraph(const TestGraph& graph) = delete;
             
             // (3) Перегрузка оператора присваивания
-            Graph& operator=(const Graph& graph) = delete;
+            TestGraph& operator=(const TestGraph& graph) = delete;
             
             // (4) Первичная инициализация обработчика, установление связей
-            void initialize(Window& window, fluid::Model2D& model);
+            void initialize(int sizeX, int sizeY, Window& window);
             
             // (5) Обрабатывает нажатия клавиш и состояние окна программы
             void draw();
             
             // (6) Деструктор
-            ~Graph() = default;
+            ~TestGraph() = default;
+        
+        private :
+            
+            // (1) Изменяет цвет пикселя картинки в соотв. с сост. мыши
+            bool checkMouse();
     };
-    */
 }
 
 #endif
