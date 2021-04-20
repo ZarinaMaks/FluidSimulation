@@ -1,10 +1,11 @@
 #pragma once
 
 #include "json.h"
-#include "FluidLib/basic.h"
-#include "FluidLib/components2d.h"
-#include "FluidLib/fluids2d.h"
-#include "FluidLib/fluidlib2d.h"
+
+#include "basic.h"
+#include "components2d.h"
+#include "fluids2d.h"
+#include "fluidlib2d.h"
 
 namespace fio {
 inline fluid::Point deserializePoint(const nlohmann::json &j) {
@@ -14,21 +15,29 @@ inline fluid::Point deserializePoint(const nlohmann::json &j) {
     bool isInArea;
     j.at("isInArea").get_to(isInArea);
 
-    return {
-            value,
-            isInArea
-    };
+    fluid::Point temp;
+    temp.value = value;
+    temp.isInArea = isInArea;
+    return temp; // TODO: may be it is more reasonable to add an appropriate constructor to Point?
 }
 
 inline fluid::SField2D deserializeSField2D(const nlohmann::json &j) {
     // TODO: SField does not have constructor from points array
     // ...and honestly I don't get why there is no way to create non-const SField2D
+
+    fluid::SField2D sField2D; // TODO: set values;
+    return sField2D;
 }
 
 inline fluid::VField2D deserializeVField2D(const nlohmann::json &j) {
     fluid::SField2D componentX = deserializeSField2D(j.at("componentX"));
-    fluid::SField2D componentX = deserializeSField2D(j.at("componentY"));
+    fluid::SField2D componentY = deserializeSField2D(j.at("componentY"));
     // TODO: same
+
+    fluid::VField2D vField2D;
+    vField2D.x() = componentX;
+    vField2D.y() = componentY; // is it a proper way to do it?
+    return vField2D;
 }
 
 inline fluid::WallBorder2D deserializeWallBorder2D(const nlohmann::json &j) {
@@ -40,9 +49,9 @@ inline fluid::WallBorder2D deserializeWallBorder2D(const nlohmann::json &j) {
 
 inline fluid::CavityBorder2D deserializeCavityBorder2D(const nlohmann::json &j) {
     fluid::CavityBorder2D cavityBorder2D;
-    cavityBorder2D.border2D = deserializeVfield2D(j.at("border2D"));
-    cavityBorder2D.pressure2D = deserializeSfield2D(j.at("pressure2D"));
-    return cavityBorder2D; // TODO: save
+    cavityBorder2D.border2D = deserializeVField2D(j.at("border2D"));
+    cavityBorder2D.pressure2D = deserializeSField2D(j.at("pressure2D"));
+    return cavityBorder2D; // TODO: same
 }
 
 inline fluid::GravityBorder2D deserializeGravityBorder2D(const nlohmann::json &j) {
@@ -60,14 +69,14 @@ inline fluid::SpeedBorder2D deserializeSpeedBorder2D(const nlohmann::json &j) {
 
 inline fluid::Border2D deserializeBorder2D(const nlohmann::json &j) {
     fluid::Border2D border2D;
-    border2D.wallBorder2D = deserializeWallBorder2D(j.at("wallBorder2D"));
+    border2D.wall2D = deserializeWallBorder2D(j.at("wall2D"));
     border2D.cavity2D = deserializeCavityBorder2D(j.at("cavity2D"));
     border2D.gravity2D = deserializeGravityBorder2D(j.at("gravity2D"));
     border2D.speed2D = deserializeSpeedBorder2D(j.at("speed2D"));
     return border2D; // TODO: same
 }
 
-inline fluid::BasicFluid2D serializeBasicFluid2D(const nlohmann::json &j) {
+inline fluid::BasicFluid2D deserializeBasicFluid2D(const nlohmann::json &j) {
     fluid::BasicFluid2D basicFluid2D;
     basicFluid2D.force2D = deserializeVField2D(j.at("force2D"));
     basicFluid2D.speed2D = deserializeVField2D(j.at("speed2D"));
