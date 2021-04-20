@@ -23,9 +23,18 @@ inline fluid::Point deserializePoint(const nlohmann::json &j) {
 
 inline fluid::SField2D deserializeSField2D(const nlohmann::json &j) {
     // TODO: SField does not have constructor from points array
-    // ...and honestly I don't get why there is no way to create non-const SField2D
 
     fluid::SField2D sField2D; // TODO: set values;
+    std::size_t xSize = j.size();
+    std::size_t ySize = j[0].size();
+
+
+    sField2D.resize(xSize, ySize);
+    for (std::size_t x = 0; x < xSize; ++x) {
+        for (std::size_t y = 0; y < ySize; ++y) {
+            sField2D.field(x, y) = j[x][y];
+        }
+    }
     return sField2D;
 }
 

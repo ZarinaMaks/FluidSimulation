@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+#include <fstream>
+#include <iomanip>
+
 #include "json.h"
 #include "basic.h"
 #include "components2d.h"
@@ -96,5 +100,17 @@ inline nlohmann::json serializeModel2D(const fluid::Model2D &model2D) {
             {"fluid2D",  serializeFluid2D(model2D.fluid2D)},
             {"border2D", serializeBorder2D(model2D.border2D)}
     };
+}
+
+inline void saveToFile(const std::string &fileName, const nlohmann::json &j) {
+    std::ofstream output(fileName);
+    output << std::setw(4) << j << std::endl;
+}
+
+inline nlohmann::json loadFromFile(const std::string &fileName) {
+    nlohmann::json j;
+    std::ifstream input(fileName);
+    input >> j;
+    return j;
 }
 } // namespace fio
