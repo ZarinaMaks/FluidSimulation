@@ -3,6 +3,13 @@
 #include "deserializers.h"
 #include "serializers.h"
 
+namespace {
+using namespace fio;
+
+void test_1() {
+}
+}
+
 int main() {
-    std::cout << "Test" << std::endl;
+    test_1();
 }
