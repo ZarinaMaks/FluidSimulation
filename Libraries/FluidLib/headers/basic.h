@@ -26,11 +26,11 @@ namespace fluid
     const int MIN_SIZE_Z = 3;
     
     // Количество шагов для метода итераций Якоби
-    const int JACOBI_STEP_NUMBER = 200;
+    const int JACOBI_STEP_NUMBER = 80;
     
     // Приращения аргументов
-    const Real DT = 1.0;
-    const Real DS = 1.0;
+    const Real DT = 0.001;
+    const Real DS = 0.01;
     const Real DX = DS;
     const Real DY = DS;
     const Real DZ = DS;

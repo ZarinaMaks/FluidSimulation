@@ -76,10 +76,18 @@ namespace fluid
             // (14) Присваивает поэлементно поле "field2" полю "field1"
             void assign(VField2D& field1, const VField2D& field2);
             
-            // (15) Установка значений по умолчанию
+            ////////// Арифметика со скалярами ///////////////////////////////
+            
+            // (15) Домножает все элементы скалярного поля на скаляр
+            void mul(SField2D& field1, Real multiplier);
+            
+            // (16) Домножает все элементы векторного поля на скаляр
+            void mul(VField2D& field1, Real multiplier);
+            
+            // (17) Установка значений по умолчанию
             void clear();
             
-            // (16) Деструктор
+            // (18) Деструктор
             ~Operator2D() = default;
             
         private :

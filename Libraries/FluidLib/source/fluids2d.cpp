@@ -64,10 +64,12 @@ void BasicFluidModeler2D::compute()
     
     // Изменение поля давлений
     tools2D_->operation().div(fluid2D_->speed2D, tempSF2D_);
+    tools2D_->operation().mul(tempSF2D_, fluid2D_->density / DT);
     tools2D_->poisson().solve(fluid2D_->pressure2D, tempSF2D_, -DX * DX, 4);
     
     // Нахождение поля скоростей с нулевой дивергенцией
     tools2D_->operation().grad(fluid2D_->pressure2D, tempVF2D_);
+    tools2D_->operation().mul(tempVF2D_, DT / fluid2D_->density);
     tools2D_->operation().sub(fluid2D_->speed2D, tempVF2D_);
 }
 

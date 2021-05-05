@@ -149,7 +149,29 @@ void Operator2D::assign(VField2D& field1, const VField2D& field2)
     assign(field1.y(), field2.y());
 }
 
-// (15) Освобождает выделенную память
+// (15) Домножает все элементы скалярного поля на скаляр
+void Operator2D::mul(SField2D& field1, Real multiplier)
+{
+    for (int i = 0; i < field1.getSizeX(); ++i)
+    {
+        for (int j = 0; j < field1.getSizeY(); ++j)
+        {
+            if (field1.area(i, j))
+            {
+                field1.field(i, j) *= multiplier;
+            }
+        }
+    }
+}
+
+// (16) Домножает все элементы векторного поля на скаляр
+void Operator2D::mul(VField2D& field1, Real multiplier)
+{
+    mul(field1.x(), multiplier);
+    mul(field1.y(), multiplier);
+}
+
+// (17) Освобождает выделенную память
 void Operator2D::clear()
 {
     tempSF2D_.clear();
@@ -325,7 +347,7 @@ Real Interpolation2D::compute(Real x, Real y)
     // Вычисляем все коэффициенты (Билинейная интерполяция)
     a0_ = (values2D_.fx0y0 / denominator) * (DX - x) * (DY - y);
     a1_ = (values2D_.fx0y1 / denominator) * (DX - x) * (y);
-    a2_ = (values2D_.fx1y1 / denominator) * (x) * (DY - y);
+    a2_ = (values2D_.fx1y0 / denominator) * (x) * (DY - y);
     a3_ = (values2D_.fx1y1 / denominator) * (x) * (y);
     
     // Возвращаем приближеннное значение

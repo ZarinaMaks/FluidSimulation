@@ -76,6 +76,7 @@ void WallBorderModeler2D::findBorrowDot(int i, int j)
 // (2) Рассчитывает скорость в (i, j) элементе
 void WallBorderModeler2D::computeSpeed(int i, int j)
 {
+    
     // Проекции векторов нормали и скорости на разные направления
     Real speedX  = interp2D_->compute(speed2D_->x(), borrowX_, borrowY_);
     Real speedY  = interp2D_->compute(speed2D_->y(), borrowX_, borrowY_);
