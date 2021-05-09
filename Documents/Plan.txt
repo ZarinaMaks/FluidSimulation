@@ -1,0 +1,47 @@
+// Общий скелет решения задачи течения Пуазеля
+class ProgramPuisaile
+{
+    private :
+        
+        Model2D   model2D_;    // Структура инф-ии о жидкости [fluidlib.h] (OK)
+        Modeler2D modeler2D_;  // Моделировщик [fluidlib.h] (OK)
+        
+        Statistic statistic_;  // Собирает статистику по модели (и пишет в файл например) [Кто-нибудь]
+        Interface interface_;  // Класс, который отвечает за связь с пользователем и 
+                               // управлением данными жидкости и не только [Кто-нибудь]
+        
+        GraphUnit grUnit_;     // Класс, который отвечает за рисование [Зарина]
+        
+    public :
+        
+        // Конструктор, =, .....
+        
+        // Первичная инициализация
+        void initialize(...)
+        {
+            interface_.initialize(...);
+            statistic_.initialize(...);
+            grUnit_.initialize(...);
+            modeler2D_.initialize(sizeX, sizeY, model2D_);
+        }
+        
+        // Основное действие
+        void run()
+        {
+            while (!haveExit)
+            {
+                interface_.check(haveExit);
+                modeler2D_.compute();
+                grUnit_.draw();
+            }
+        }
+        
+        // Завершение работы/или деструктор
+        void finish()
+        {
+            statistic_.output(...);
+            grUnit_.close(...);
+        }
+        
+        // Деструктор
+};
